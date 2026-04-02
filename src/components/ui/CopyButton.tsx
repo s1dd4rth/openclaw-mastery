@@ -1,26 +1,14 @@
-"use client";
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 
 export const CopyButton = ({ text, label }: { text: string; label?: string }) => {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "absolute";
-        textArea.style.left = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-            document.execCommand('copy');
+        navigator.clipboard.writeText(text).then(() => {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
-        } catch (copy_error) {
-            // Silently handle error
-        } finally {
-            textArea.remove();
-        }
+        }).catch(() => {});
     };
 
     return (

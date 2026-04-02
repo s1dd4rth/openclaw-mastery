@@ -1,4 +1,3 @@
-"use client";
 import React from 'react';
 import { ArrowRight, CheckCircle2, Trophy } from 'lucide-react';
 
@@ -7,8 +6,10 @@ interface NavigationFooterProps {
     nextLabel: string;
     /** Primary CTA click handler */
     onNext: () => void;
-    /** Optional: show the "module complete" celebration variant */
-    isFinalModuleComplete?: boolean;
+    /** True when the user is on the very last section of the course */
+    isLastSectionOfCourse?: boolean;
+    /** True when every module's checklist is fully ticked */
+    isFullyComplete?: boolean;
 }
 
 /**
@@ -19,9 +20,10 @@ interface NavigationFooterProps {
 export const NavigationFooter = ({
     nextLabel,
     onNext,
-    isFinalModuleComplete,
+    isLastSectionOfCourse,
+    isFullyComplete,
 }: NavigationFooterProps) => {
-    if (isFinalModuleComplete) {
+    if (isLastSectionOfCourse) {
         return (
             <div className="mt-10 pt-8 border-t border-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-8 text-center">
@@ -33,6 +35,11 @@ export const NavigationFooter = ({
                         You've built a private, self-hosted AI agent from scratch. Submit the
                         assessment form to claim your completion record.
                     </p>
+                    {!isFullyComplete && (
+                        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 max-w-sm mx-auto mb-6">
+                            You have incomplete checklist items in earlier modules. You can still submit your assessment.
+                        </p>
+                    )}
                     <a
                         href="https://docs.google.com/forms/d/e/1FAIpQLSeoR5wfheIkD0hCaf3eYmJ6s8aNMbylfJ00hi6djlkpIuF1FA/viewform"
                         target="_blank"
