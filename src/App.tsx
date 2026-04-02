@@ -1,199 +1,246 @@
-"use client";
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MODULES_DATA } from './data/modules';
-import { useProgress, useNavState } from './hooks/useProgress';
-import { Header } from './components/layout/Header';
+import { useConnection } from './hooks/useConnection';
+import { useStepProgress } from './hooks/useStepProgress';
+import { useChatMessages } from './hooks/useChatMessages';
 import { Sidebar } from './components/layout/Sidebar';
-import { CourseContent } from './components/sections/CourseContent';
-import { Checklist } from './components/sections/Checklist';
-import { Troubleshooting } from './components/sections/Troubleshooting';
+import { MobileGate } from './components/layout/MobileGate';
+import { PairingFlow } from './components/connection/PairingFlow';
+import { StepEngine } from './components/steps/StepEngine';
+import { ValidationDashboard } from './components/validation/ValidationDashboard';
+import { ChatPanel } from './components/chat/ChatPanel';
+import type { VerifyResult } from './data/types';
 
 export default function App() {
-    // ── Top-level navigation state (persisted to localStorage) ──────────────
-    const {
-        activeModuleId,
-        activeSection,
-        setActiveModuleId,
-        setActiveSection,
-        setModuleAndSection,
-        isNavLoaded,
-    } = useNavState(MODULES_DATA[0]!.id, MODULES_DATA[0]!.sections[0]!.id);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [moduleDropdownOpen, setModuleDropdownOpen] = useState(false);
+  // ── Connection ──────────────────────────────────────────────────────
+  const {
+    connection, isConnected, isPairing, pairingError, isLoaded: connLoaded,
+    pair, disconnect,
+  } = useConnection();
 
-    // ── Progress (localStorage) ─────────────────────────────────────────────
-    const { completedItems, toggleItem, isLoaded } = useProgress('openclawMasteryProgress');
+  // ── Progress & Nav ──────────────────────────────────────────────────
+  const {
+    nav, userInputs, isLoaded: progressLoaded,
+    getStepState, isStepComplete, setVerifyResults, skipStep,
+    markStepComplete, setNav, saveUserInput, getModuleChecks,
+  } = useStepProgress();
 
-    const currentModule = MODULES_DATA.find(m => m.id === activeModuleId) || MODULES_DATA[0]!;
+  // ── Chat ────────────────────────────────────────────────────────────
+  const { messages, isSending, sendMessage, sendVerify, clearMessages } =
+    useChatMessages(connection);
 
-    // ── Module switch: always reset to first section ────────────────────────
-    const handleModuleChange = (moduleId: string) => {
-        const targetModule = MODULES_DATA.find(m => m.id === moduleId);
-        if (targetModule) {
-            // Atomic write so both module + section are persisted together
-            setModuleAndSection(moduleId, targetModule.sections[0]!.id);
-        }
-    };
+  // ── UI state ────────────────────────────────────────────────────────
+  const [moduleDropdownOpen, setModuleDropdownOpen] = useState(false);
+  const [showPairing, setShowPairing] = useState(false);
+  const [mobileOverride, setMobileOverride] = useState(false);
 
-    // ── Per-module checklist progress ───────────────────────────────────────
-    const completedInCurrentModule =
-        currentModule?.checklistItems?.filter((item: { id: string }) =>
-            completedItems.has(item.id),
-        ).length ?? 0;
+  // ── Derived ─────────────────────────────────────────────────────────
+  const currentModule = MODULES_DATA.find(m => m.id === nav.moduleId) ?? MODULES_DATA[0]!;
+  const currentPhase = currentModule.phases.find(p => p.id === nav.phaseId) ?? currentModule.phases[0]!;
+  const isValidationPhase = currentPhase.id === 'validation';
 
-    const progressPercentage =
-        Math.round((completedInCurrentModule / (currentModule?.checklistItems?.length || 1)) * 100) || 0;
+  const completedModulesCount = MODULES_DATA.filter(mod => {
+    const { total, passed } = getModuleChecks(mod.id);
+    return total > 0 && passed === total;
+  }).length;
 
-    // A module is "complete" when every checklist item is ticked.
-    const completedModulesCount = MODULES_DATA.filter(
-        module =>
-            module.checklistItems.length > 0 &&
-            module.checklistItems.every((item: { id: string }) => completedItems.has(item.id)),
-    ).length;
-
-    // ── Linear "next" navigation ─────────────────────────────────────────────
-    /**
-     * Navigate to the next section within the current module, or — if this
-     * is the last section — jump to the first section of the next module.
-     * At the very last section of the very last module, this is a no-op
-     * (the completion screen renders instead).
-     */
-    const navigateNext = () => {
-        const sections = currentModule.sections;
-        const currentSectionIndex = sections.findIndex((s: any) => s.id === activeSection);
-        const nextSectionInModule = sections[currentSectionIndex + 1];
-
-        if (nextSectionInModule) {
-            // Advance within the same module — persists single field
-            setActiveSection(nextSectionInModule.id);
-        } else {
-            // Cross module boundary — atomic write
-            const currentModuleIndex = MODULES_DATA.findIndex(m => m.id === activeModuleId);
-            const nextModule = MODULES_DATA[currentModuleIndex + 1];
-            if (nextModule) {
-                setModuleAndSection(nextModule.id, nextModule.sections[0]!.id);
-            }
-            // If no next module → end of course; completion card renders instead
-        }
-    };
-
-    /**
-     * Returns the human-readable label for the next step, used as the CTA
-     * button text.  Falls back to the next module name when crossing a
-     * module boundary, and returns null only at the very end of the course.
-     */
-    const getNextLabel = (): string | null => {
-        const sections = currentModule.sections;
-        const currentSectionIndex = sections.findIndex((s: any) => s.id === activeSection);
-        const nextSectionInModule = sections[currentSectionIndex + 1];
-
-        if (nextSectionInModule) {
-            return nextSectionInModule.title;
-        }
-
-        const currentModuleIndex = MODULES_DATA.findIndex(m => m.id === activeModuleId);
-        const nextModule = MODULES_DATA[currentModuleIndex + 1];
-        if (nextModule) {
-            return nextModule.shortTitle;
-        }
-
-        return null; // end of course
-    };
-
-    const nextLabel = getNextLabel();
-    const isVeryLastSection =
-        nextLabel === null &&
-        completedModulesCount === MODULES_DATA.length;
-
-    // ── Content renderer ─────────────────────────────────────────────────────
-    const renderContent = () => {
-        const navProps = {
-            nextLabel,
-            onNavigateNext: navigateNext,
-            isVeryLastSection,
-        };
-
-        if (activeSection === 'checklist') {
-            return (
-                <Checklist
-                    currentModule={currentModule}
-                    completedItems={completedItems}
-                    toggleItem={toggleItem}
-                    progressPercentage={progressPercentage}
-                    {...navProps}
-                />
-            );
-        }
-
-        if (activeSection === 'troubleshooting') {
-            return (
-                <Troubleshooting
-                    currentModule={currentModule}
-                    {...navProps}
-                />
-            );
-        }
-
-        return (
-            <CourseContent
-                activeModuleId={activeModuleId}
-                activeSection={activeSection}
-                currentModule={currentModule}
-                {...navProps}
-            />
-        );
-    };
-
-    // ── Loading gate — wait for both checklist + nav to rehydrate ────────────
-    if (!isLoaded || !isNavLoaded) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-slate-500">
-                Loading mastery curriculum...
-            </div>
-        );
+  // ── Handlers ────────────────────────────────────────────────────────
+  const handleModuleChange = (moduleId: string) => {
+    const mod = MODULES_DATA.find(m => m.id === moduleId);
+    if (mod) {
+      setNav({ moduleId, phaseId: mod.phases[0]?.id ?? '', stepIndex: 0 });
+      clearMessages();
     }
+  };
 
+  const handlePhaseChange = (phaseId: string) => {
+    setNav({ phaseId, stepIndex: 0 });
+  };
+
+  const handleExecute = async (prompt: string, stepTitle: string) => {
+    await sendMessage(prompt, { auto: true, stepTitle });
+  };
+
+  const handleRunChecks = async (
+    stepId: string,
+    checks: Array<{ id: string; verifyPrompt: string }>,
+  ) => {
+    const results: Record<string, VerifyResult> = {};
+    for (const check of checks) {
+      const checkResults = await sendVerify(check.verifyPrompt);
+      if (checkResults) {
+        for (const r of checkResults) {
+          results[r.id] = { pass: r.pass, detail: r.detail, checkedAt: new Date().toISOString() };
+        }
+      } else {
+        results[check.id] = { pass: false, detail: 'Verification returned non-JSON response. Check the chat panel.', checkedAt: new Date().toISOString() };
+      }
+    }
+    setVerifyResults(nav.moduleId, nav.phaseId, stepId, results);
+  };
+
+  const handleFix = async (
+    fixPrompt: string,
+    stepId: string,
+    checks: Array<{ id: string; verifyPrompt: string }>,
+  ) => {
+    await sendMessage(fixPrompt, { auto: true, stepTitle: 'Auto-fix' });
+    await handleRunChecks(stepId, checks);
+  };
+
+  const handleRecheckSingle = async (
+    stepId: string,
+    checkId: string,
+    verifyPrompt: string,
+  ) => {
+    await handleRunChecks(stepId, [{ id: checkId, verifyPrompt }]);
+  };
+
+  const handleValidateAll = async () => {
+    for (const phase of currentModule.phases) {
+      for (const step of phase.steps) {
+        if (step.verify) {
+          await handleRunChecks(
+            step.id,
+            step.verify.checks.map(c => ({ id: c.id, verifyPrompt: c.verifyPrompt })),
+          );
+        }
+      }
+    }
+  };
+
+  // ── Loading gate ────────────────────────────────────────────────────
+  if (!connLoaded || !progressLoaded) {
     return (
-        <div className="min-h-screen bg-transparent font-sans text-slate-900 flex flex-col md:flex-row">
-            <Header
-                mobileMenuOpen={mobileMenuOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
-            />
-
-            <Sidebar
-                mobileMenuOpen={mobileMenuOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
-                moduleDropdownOpen={moduleDropdownOpen}
-                setModuleDropdownOpen={setModuleDropdownOpen}
-                activeModuleId={activeModuleId}
-                setActiveModuleId={handleModuleChange}
-                activeSection={activeSection}
-                setActiveSection={setActiveSection}
-                currentModule={currentModule}
-                completedInCurrentModule={completedInCurrentModule}
-                progressPercentage={progressPercentage}
-                completedModulesCount={completedModulesCount}
-                totalModulesCount={MODULES_DATA.length}
-            />
-
-            {/* Main Content Area */}
-            <main className="flex-1 w-full max-w-5xl mx-auto p-4 md:p-8 overflow-y-auto">
-                {/* Module Header */}
-                <div className="mb-8">
-                    <div className="text-sm font-semibold text-openclaw-red mb-2 tracking-wide uppercase">
-                        {currentModule.shortTitle}
-                    </div>
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight">
-                        {currentModule.title}
-                    </h1>
-                    <p className="text-lg text-slate-600 max-w-3xl leading-relaxed">
-                        {currentModule.description}
-                    </p>
-                </div>
-
-                {/* Section content with nav footer injected */}
-                {renderContent()}
-            </main>
-        </div>
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Loading mastery curriculum...
+      </div>
     );
+  }
+
+  // ── Mobile gate ─────────────────────────────────────────────────────
+  if (typeof window !== 'undefined' && window.innerWidth < 768 && !mobileOverride) {
+    return <MobileGate onContinueAnyway={() => setMobileOverride(true)} />;
+  }
+
+  // ── Module check data (for dashboard) ───────────────────────────────
+  const moduleChecks = getModuleChecks(nav.moduleId);
+
+  return (
+    <>
+      {showPairing && (
+        <PairingFlow
+          onPair={pair}
+          isPairing={isPairing}
+          pairingError={pairingError}
+          onClose={() => setShowPairing(false)}
+        />
+      )}
+
+      <div className="app-layout">
+        {/* Sidebar */}
+        <Sidebar
+          moduleDropdownOpen={moduleDropdownOpen}
+          setModuleDropdownOpen={setModuleDropdownOpen}
+          activeModuleId={nav.moduleId}
+          activePhaseId={nav.phaseId}
+          onModuleChange={handleModuleChange}
+          onPhaseChange={handlePhaseChange}
+          currentModule={currentModule}
+          isConnected={isConnected}
+          clawName={connection?.clawName}
+          onOpenPairing={() => setShowPairing(true)}
+          onDisconnect={disconnect}
+          completedModulesCount={completedModulesCount}
+        />
+
+        {/* Main content */}
+        <main className="app-main p-6 md:p-8">
+          {/* Module header */}
+          <div className="mb-8">
+            <div className="text-sm font-semibold text-openclaw-red mb-2 tracking-wide uppercase">
+              {currentModule.shortTitle}
+            </div>
+            <h1 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight">
+              {currentModule.title}
+            </h1>
+            <p className="text-lg text-slate-600 max-w-3xl leading-relaxed">
+              {currentModule.description}
+            </p>
+          </div>
+
+          {/* Phase title */}
+          {!isValidationPhase && (
+            <h2 className="text-xl font-bold text-slate-800 mb-6">
+              Phase: {currentPhase.title}
+            </h2>
+          )}
+
+          {/* Content */}
+          {isValidationPhase ? (
+            <ValidationDashboard
+              moduleTitle={currentModule.title}
+              total={moduleChecks.total}
+              passed={moduleChecks.passed}
+              checks={moduleChecks.checks}
+              isConnected={isConnected}
+              isSending={isSending}
+              onValidateAll={handleValidateAll}
+              onFix={async (fixPrompt) => {
+                await sendMessage(fixPrompt, { auto: true, stepTitle: 'Auto-fix' });
+                await handleValidateAll();
+              }}
+              onRecheck={async (checkId) => {
+                // Find the check and re-run it
+                for (const phase of currentModule.phases) {
+                  for (const step of phase.steps) {
+                    const check = step.verify?.checks.find(c => c.id === checkId);
+                    if (check) {
+                      await handleRunChecks(step.id, [{ id: check.id, verifyPrompt: check.verifyPrompt }]);
+                      return;
+                    }
+                  }
+                }
+              }}
+            />
+          ) : (
+            <StepEngine
+              steps={currentPhase.steps}
+              currentIndex={nav.stepIndex}
+              moduleId={nav.moduleId}
+              phaseId={nav.phaseId}
+              isConnected={isConnected}
+              isSending={isSending}
+              userInputs={userInputs}
+              getVerifyResults={stepId =>
+                getStepState(nav.moduleId, nav.phaseId, stepId)?.verifyResults
+              }
+              isStepComplete={stepId =>
+                isStepComplete(nav.moduleId, nav.phaseId, stepId)
+              }
+              onExecute={handleExecute}
+              onRunChecks={handleRunChecks}
+              onFix={handleFix}
+              onRecheckSingle={handleRecheckSingle}
+              onSkip={stepId => skipStep(nav.moduleId, nav.phaseId, stepId)}
+              onSaveInput={saveUserInput}
+              onNavigateStep={index => setNav({ stepIndex: index })}
+            />
+          )}
+        </main>
+
+        {/* Chat panel */}
+        <div className="app-chat">
+          <ChatPanel
+            messages={messages}
+            isSending={isSending}
+            isConnected={isConnected}
+            clawName={connection?.clawName}
+            onSendMessage={msg => sendMessage(msg)}
+            onOpenPairing={() => setShowPairing(true)}
+          />
+        </div>
+      </div>
+    </>
+  );
 }

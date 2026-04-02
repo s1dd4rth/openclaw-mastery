@@ -3,7 +3,7 @@
 @theme {
   --color-openclaw-red: #EF4B58;
   --color-openclaw-dark: #0f172a;
-  --font-sans: 'Outfit', 'Inter', sans-serif;
+  --font-sans: 'Outfit', sans-serif;
 }
 
 @layer components {
@@ -24,7 +24,7 @@
     background-image: radial-gradient(circle at top right, rgba(239, 75, 88, 0.05), transparent 40%);
     background-attachment: fixed;
     color: #0f172a;
-    font-family: 'Outfit', 'Inter', sans-serif;
+    font-family: 'Outfit', sans-serif;
   }
 }
 
@@ -91,3 +91,34 @@
 .md-prose th { background: #f1f5f9; color: #0f172a; font-weight: 700; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; }
 .md-prose td { padding: 0.45rem 0.75rem; border: 1px solid #e2e8f0; color: #374151; }
 .md-prose tr:nth-child(even) td { background: #f8fafc; }
+
+/* ── Three-column app layout ─────────────────────────────────────────── */
+.app-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr 320px;
+  height: 100vh;
+  overflow: hidden;
+}
+
+@media (max-width: 1023px) {
+  .app-layout {
+    grid-template-columns: 200px 1fr 280px;
+  }
+}
+
+.app-sidebar {
+  overflow-y: auto;
+  border-right: 1px solid #e2e8f0;
+}
+
+.app-main {
+  overflow-y: auto;
+}
+
+.app-chat {
+  overflow: hidden;
+  border-left: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
