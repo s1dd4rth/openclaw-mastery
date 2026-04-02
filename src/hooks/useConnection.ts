@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ConnectionState } from '../data/types';
-import { createOpenClawClient, pairWithInstance } from '../api/openClawClient';
+import { createOpenClawClient, type OpenClawClient } from '../api/openClawClient';
 
 const STORAGE_KEY = 'openclawConnection';
-const HEALTH_INTERVAL_MS = 60_000;
 
 function loadConnection(): ConnectionState | null {
   try {
@@ -29,11 +28,12 @@ function saveConnection(state: ConnectionState | null) {
 export function useConnection() {
   const [connection, setConnection] = useState<ConnectionState | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isPairing, setIsPairing] = useState(false);
-  const [pairingError, setPairingError] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const healthRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const clientRef = useRef<OpenClawClient | null>(null);
 
+  // Rehydrate on mount
   useEffect(() => {
     const saved = loadConnection();
     if (saved) {
@@ -42,45 +42,70 @@ export function useConnection() {
     setIsLoaded(true);
   }, []);
 
+  // Connect WebSocket when connection state is set
   useEffect(() => {
     if (!connection) {
       setIsConnected(false);
       return;
     }
+
     const client = createOpenClawClient(connection);
-    const check = async () => {
-      const alive = await client.ping();
-      setIsConnected(alive);
-    };
-    check();
-    healthRef.current = setInterval(check, HEALTH_INTERVAL_MS);
+    clientRef.current = client;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        await client.connect();
+        if (!cancelled) {
+          setIsConnected(true);
+          setConnectionError(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setIsConnected(false);
+          setConnectionError(err instanceof Error ? err.message : 'Connection failed');
+        }
+      }
+    })();
+
     return () => {
-      if (healthRef.current) clearInterval(healthRef.current);
+      cancelled = true;
+      client.disconnect();
+      clientRef.current = null;
+      setIsConnected(false);
     };
   }, [connection]);
 
-  const pair = useCallback(async (instanceUrl: string, code: string) => {
-    setIsPairing(true);
-    setPairingError(null);
+  const connect = useCallback(async (instanceUrl: string, token: string) => {
+    setIsConnecting(true);
+    setConnectionError(null);
+
+    const state: ConnectionState = {
+      instanceUrl,
+      sessionToken: token,
+      clawName: '',
+      pairedAt: new Date().toISOString(),
+    };
+
+    // Try connecting before saving to validate the URL + token
+    const testClient = createOpenClawClient(state);
     try {
-      const { token, clawName } = await pairWithInstance(instanceUrl, code);
-      const state: ConnectionState = {
-        instanceUrl,
-        sessionToken: token,
-        clawName,
-        pairedAt: new Date().toISOString(),
-      };
+      await testClient.connect();
+      testClient.disconnect();
+      // Connection works — save and set state (the useEffect will reconnect)
       setConnection(state);
       saveConnection(state);
-      setIsConnected(true);
     } catch (err) {
-      setPairingError(err instanceof Error ? err.message : 'Pairing failed');
+      setConnectionError(err instanceof Error ? err.message : 'Connection failed');
     } finally {
-      setIsPairing(false);
+      setIsConnecting(false);
     }
   }, []);
 
   const disconnect = useCallback(() => {
+    clientRef.current?.disconnect();
+    clientRef.current = null;
     setConnection(null);
     setIsConnected(false);
     saveConnection(null);
@@ -89,10 +114,11 @@ export function useConnection() {
   return {
     connection,
     isConnected,
-    isPairing,
-    pairingError,
+    isConnecting,
+    connectionError,
     isLoaded,
-    pair,
+    client: clientRef.current,
+    connect,
     disconnect,
   };
 }

@@ -1,26 +1,26 @@
 import { useState } from 'react';
-import { X, Loader2, Terminal } from 'lucide-react';
+import { X, Loader2, Shield } from 'lucide-react';
 
 interface PairingFlowProps {
-  onPair: (instanceUrl: string, code: string) => Promise<void>;
-  isPairing: boolean;
-  pairingError: string | null;
+  onConnect: (instanceUrl: string, token: string) => Promise<void>;
+  isConnecting: boolean;
+  connectionError: string | null;
   onClose: () => void;
 }
 
 export const PairingFlow = ({
-  onPair,
-  isPairing,
-  pairingError,
+  onConnect,
+  isConnecting,
+  connectionError,
   onClose,
 }: PairingFlowProps) => {
   const [url, setUrl] = useState('');
-  const [code, setCode] = useState('');
+  const [token, setToken] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (url && code) {
-      onPair(url, code);
+    if (url && token) {
+      onConnect(url, token);
     }
   };
 
@@ -38,13 +38,12 @@ export const PairingFlow = ({
         {/* Instructions */}
         <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
           <div className="flex items-start gap-3">
-            <Terminal size={20} className="text-openclaw-red mt-0.5 flex-shrink-0" />
+            <Shield size={20} className="text-openclaw-red mt-0.5 flex-shrink-0" />
             <div className="text-sm text-slate-600">
-              <p className="font-medium text-slate-800 mb-1">Step 1: Generate a pairing code</p>
+              <p className="font-medium text-slate-800 mb-1">You need two things from Module 1</p>
               <p>
-                Open your OpenClaw web chat and type{' '}
-                <code className="bg-slate-200 px-1.5 py-0.5 rounded text-xs font-mono">/pair</code>.
-                You'll get a 6-digit code and your instance URL.
+                Your <strong>gateway URL</strong> (the address you use to access your Claw's web chat)
+                and your <strong>gateway token</strong> (set during the security hardening step).
               </p>
             </div>
           </div>
@@ -54,7 +53,7 @@ export const PairingFlow = ({
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Instance URL
+              Gateway URL
             </label>
             <input
               type="url"
@@ -68,31 +67,33 @@ export const PairingFlow = ({
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Pairing Code
+              Gateway Token
             </label>
             <input
-              type="text"
-              value={code}
-              onChange={e => setCode(e.target.value)}
-              placeholder="123456"
-              maxLength={6}
+              type="password"
+              value={token}
+              onChange={e => setToken(e.target.value)}
+              placeholder="Your gateway auth token"
               required
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono tracking-widest text-center text-lg focus:outline-none focus:ring-2 focus:ring-openclaw-red/30 focus:border-openclaw-red"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-openclaw-red/30 focus:border-openclaw-red"
             />
+            <p className="text-xs text-slate-400 mt-1">
+              Stored locally in your browser. Never sent anywhere except your own gateway.
+            </p>
           </div>
 
-          {pairingError && (
+          {connectionError && (
             <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-              {pairingError}
+              {connectionError}
             </p>
           )}
 
           <button
             type="submit"
-            disabled={isPairing || !url || !code}
+            disabled={isConnecting || !url || !token}
             className="w-full py-2.5 bg-openclaw-red text-white rounded-lg font-semibold text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
-            {isPairing ? (
+            {isConnecting ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
                 Connecting...

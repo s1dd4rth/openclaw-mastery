@@ -14,8 +14,8 @@ import type { VerifyResult } from './data/types';
 export default function App() {
   // ── Connection ──────────────────────────────────────────────────────
   const {
-    connection, isConnected, isPairing, pairingError, isLoaded: connLoaded,
-    pair, disconnect,
+    connection, isConnected, isConnecting, connectionError, isLoaded: connLoaded,
+    client, connect, disconnect,
   } = useConnection();
 
   // ── Progress & Nav ──────────────────────────────────────────────────
@@ -27,7 +27,7 @@ export default function App() {
 
   // ── Chat ────────────────────────────────────────────────────────────
   const { messages, isSending, sendMessage, sendVerify, clearMessages } =
-    useChatMessages(connection);
+    useChatMessages(client);
 
   // ── UI state ────────────────────────────────────────────────────────
   const [moduleDropdownOpen, setModuleDropdownOpen] = useState(false);
@@ -130,9 +130,9 @@ export default function App() {
     <>
       {showPairing && (
         <PairingFlow
-          onPair={pair}
-          isPairing={isPairing}
-          pairingError={pairingError}
+          onConnect={connect}
+          isConnecting={isConnecting}
+          connectionError={connectionError}
           onClose={() => setShowPairing(false)}
         />
       )}

@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
-import type { ChatMessage, ConnectionState } from '../data/types';
-import { createOpenClawClient } from '../api/openClawClient';
+import type { ChatMessage } from '../data/types';
+import type { OpenClawClient } from '../api/openClawClient';
 
 let messageIdCounter = 0;
 function nextId(): string {
   return `msg-${++messageIdCounter}-${Date.now()}`;
 }
 
-export function useChatMessages(connection: ConnectionState | null) {
+export function useChatMessages(client: OpenClawClient | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
 
@@ -23,11 +23,8 @@ export function useChatMessages(connection: ConnectionState | null) {
       content: string,
       options?: { auto?: boolean; stepTitle?: string; hidden?: boolean },
     ): Promise<string | null> => {
-      if (!connection) return null;
+      if (!client || !client.isOpen()) return null;
 
-      const client = createOpenClawClient(connection);
-
-      // Add user message to chat (unless hidden)
       if (!options?.hidden) {
         addMessage({
           role: 'user',
@@ -41,7 +38,6 @@ export function useChatMessages(connection: ConnectionState | null) {
       try {
         const response = await client.sendMessage(content);
 
-        // Add assistant response (unless the caller hid the request)
         if (!options?.hidden) {
           addMessage({ role: 'assistant', content: response });
         }
@@ -57,21 +53,19 @@ export function useChatMessages(connection: ConnectionState | null) {
         setIsSending(false);
       }
     },
-    [connection, addMessage],
+    [client, addMessage],
   );
 
   const sendVerify = useCallback(
     async (prompt: string): Promise<Array<{ id: string; pass: boolean; detail: string }> | null> => {
-      if (!connection) return null;
+      if (!client || !client.isOpen()) return null;
 
-      const client = createOpenClawClient(connection);
       setIsSending(true);
-
       try {
         const result = await client.sendVerify(prompt);
         if (result) return result.checks;
 
-        // JSON parse failed — show raw response in chat as fallback
+        // JSON parse failed — send again and show raw response in chat
         const raw = await client.sendMessage(prompt);
         addMessage({ role: 'assistant', content: raw });
         return null;
@@ -83,7 +77,7 @@ export function useChatMessages(connection: ConnectionState | null) {
         setIsSending(false);
       }
     },
-    [connection, addMessage],
+    [client, addMessage],
   );
 
   const clearMessages = useCallback(() => setMessages([]), []);
