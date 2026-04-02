@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --color-openclaw-red: #EF4B58;
+  --color-openclaw-dark: #0f172a;
+  --font-sans: 'Outfit', 'Inter', sans-serif;
+}
+
+@layer components {
+  /* Hide scrollbars for absolute clean aesthetics */
+  ::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+}
+
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Clean Light Developer background */
+    background-color: #fafafa;
+    /* Soft top-right highlight to break the flat white */
+    background-image: radial-gradient(circle at top right, rgba(239, 75, 88, 0.05), transparent 40%);
+    background-attachment: fixed;
+    color: #0f172a;
+    font-family: 'Outfit', 'Inter', sans-serif;
+  }
+}
+
+/* Light mode technical grid background */
+.bg-grid-slate-200 {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgba(226,232,240,0.5)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+    background-size: 32px 32px;
+}
+
+/* ── Markdown prose renderer ───────────────────────────────────────────────── */
+/* Scoped to .md-prose so styles never bleed into the rest of the UI.          */
+.md-prose {
+  color: #374151;
+  line-height: 1.75;
+  font-size: 0.9rem;
+}
+.md-prose h1 { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 1.5rem 0 0.75rem; }
+.md-prose h2 { font-size: 1rem;    font-weight: 700; color: #0f172a; margin: 1.25rem 0 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.25rem; }
+.md-prose h3 { font-size: 0.9rem;  font-weight: 700; color: #1e293b; margin: 1rem 0 0.375rem; }
+.md-prose p  { margin: 0.625rem 0; }
+.md-prose a  { color: #EF4B58; text-decoration: none; }
+.md-prose a:hover { text-decoration: underline; }
+.md-prose strong { color: #0f172a; font-weight: 700; }
+.md-prose em { font-style: italic; }
+.md-prose hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.25rem 0; }
+
+.md-prose ul { list-style: disc; padding-left: 1.5rem; margin: 0.625rem 0; }
+.md-prose ol { list-style: decimal; padding-left: 1.5rem; margin: 0.625rem 0; }
+.md-prose li { margin: 0.25rem 0; }
+.md-prose li > ul, .md-prose li > ol { margin: 0.125rem 0; }
+.md-prose input[type="checkbox"] { margin-right: 0.375rem; accent-color: #EF4B58; }
+
+.md-prose :not(pre) > code {
+  background: #1e293b;
+  color: #86efac;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.78rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.375rem;
+}
+.md-prose pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid #1e293b;
+  overflow-x: auto;
+  margin: 0.875rem 0;
+}
+.md-prose pre code { background: transparent; color: inherit; padding: 0; border-radius: 0; font-size: inherit; }
+
+.md-prose blockquote {
+  border-left: 3px solid #EF4B58;
+  background: #fff7f7;
+  margin: 0.75rem 0;
+  padding: 0.5rem 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: #9f1239;
+}
+.md-prose table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.875rem 0; }
+.md-prose th { background: #f1f5f9; color: #0f172a; font-weight: 700; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; }
+.md-prose td { padding: 0.45rem 0.75rem; border: 1px solid #e2e8f0; color: #374151; }
+.md-prose tr:nth-child(even) td { background: #f8fafc; }
