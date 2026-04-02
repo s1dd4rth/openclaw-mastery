@@ -65,13 +65,13 @@ const m1: Module = {
             steps: [
                 {
                     id: 'get-api-key',
-                    title: 'Get Your API Key',
+                    title: 'Set Up Your VPS and API Key',
                     learn:
-                        'OpenClaw connects to an AI model provider — OpenAI, Anthropic, or another compatible service — through an API key. This key is the credential that lets your self-hosted gateway make requests on your behalf. Keeping it secret is critical: anyone who has it can run up charges on your account.',
+                        'OpenClaw runs on a VPS (Virtual Private Server) and connects to an AI model through an API key. You will set up both through the Hostinger dashboard. The API key is a secret credential, so your Claw is designed to never display or handle it directly. You will enter it yourself during the VPS setup wizard.',
                     do: {
                         prompt:
-                            'Open your AI provider dashboard, generate a new API key scoped to this project, and paste it into the OpenClaw setup wizard when prompted.',
-                        instructionUrl: `${INSTRUCTION_BASE}m1-get-api-key.md`,
+                            'I just set up my OpenClaw VPS and entered my API key through the Hostinger setup wizard. Can you confirm you are running and able to respond? Just say hello and tell me your current status.',
+                        instructionUrl: `${INSTRUCTION_BASE}day01-deploy.md`,
                         requiresInput: {
                             label: 'Your OpenClaw instance URL',
                             placeholder: 'https://your-vps-ip:4000',
@@ -81,24 +81,12 @@ const m1: Module = {
                     verify: {
                         checks: [
                             {
-                                id: 'api-key-stored',
-                                label: 'API key is stored in OpenClaw',
-                                verifyPrompt:
-                                    'Run: openclaw config show | grep PROVIDER_KEY and respond with JSON: { "pass": true/false, "detail": "what you saw" }',
-                                failHint:
-                                    'The key may not have been saved. Re-open the setup wizard and re-enter it.',
-                                fixPrompt:
-                                    'Open the OpenClaw setup wizard again and re-enter your API key when asked.',
-                            },
-                            {
                                 id: 'web-chat-responds',
                                 label: 'Claw responds in the web chat',
                                 verifyPrompt:
-                                    'Send "hello" in the web chat UI. Respond with JSON: { "pass": true/false, "detail": "what the Claw replied" }',
+                                    'Can you confirm you are running? Respond ONLY with this JSON: {"checks":[{"id":"web-chat-responds","pass":true,"detail":"I am running and responding."}]}',
                                 failHint:
-                                    'If there is no response, the gateway may not have started. Restart it from your Hostinger dashboard.',
-                                fixPrompt:
-                                    'Ask the Claw: "openclaw gateway restart" then test the chat again.',
+                                    'The gateway may need a restart. Go to your Hostinger dashboard and restart the VPS, or wait a minute and try again.',
                             },
                         ],
                     },
@@ -151,7 +139,7 @@ const m1: Module = {
                                 id: 'audit-no-critical',
                                 label: 'Security audit shows no critical failures',
                                 verifyPrompt:
-                                    'Ask the Claw: "Show me the last security audit summary." Respond with JSON: { "pass": true/false, "detail": "critical count and any failing checks" }',
+                                    'Run the security audit now and report results. Respond ONLY with this JSON: {"checks":[{"id":"audit-no-critical","pass":true,"detail":"No critical failures found"}]} — set pass to false if any critical failures exist, and include the failure names in detail.',
                                 failHint:
                                     'Some fixes require a gateway restart before they apply. Ask the Claw to restart the gateway and re-run the audit.',
                                 fixPrompt:
@@ -176,7 +164,7 @@ const m1: Module = {
                                 id: 'gateway-bound',
                                 label: 'Gateway bound to 127.0.0.1 with token auth enabled',
                                 verifyPrompt:
-                                    'Run: ss -tlnp | grep 4000 and respond with JSON: { "pass": true/false, "detail": "the address shown (127.0.0.1 or 0.0.0.0)" }',
+                                    'Check what address the gateway is bound to. Respond ONLY with this JSON: {"checks":[{"id":"gateway-bound","pass":true,"detail":"Bound to 127.0.0.1 with token auth"}]} — set pass to false if the gateway is on 0.0.0.0 or token auth is disabled.',
                                 failHint:
                                     'If it shows 0.0.0.0, the bind setting was not applied. Ask the Claw to update gateway.bind in the config and restart.',
                                 fixPrompt:
@@ -201,7 +189,7 @@ const m1: Module = {
                                 id: 'dm-policy',
                                 label: 'DM and group policies are restrictive',
                                 verifyPrompt:
-                                    'Ask the Claw: "Show me the current DM and group policy settings." Respond with JSON: { "pass": true/false, "detail": "the policy values shown" }',
+                                    'Check the current DM and group message policy settings. Respond ONLY with this JSON: {"checks":[{"id":"dm-policy","pass":true,"detail":"Both set to restrictive"}]} — set pass to false if either policy allows unrestricted access.',
                                 failHint:
                                     'Policies may not have saved. Ask the Claw to show the raw policy config file.',
                                 fixPrompt:
@@ -211,7 +199,7 @@ const m1: Module = {
                                 id: 'credentials-permissions',
                                 label: '~/.openclaw/credentials has permissions 700',
                                 verifyPrompt:
-                                    'Run: stat -c "%a" ~/.openclaw/credentials and respond with JSON: { "pass": true/false, "detail": "the permissions value shown" }',
+                                    'Check the file permissions on ~/.openclaw/credentials without displaying its contents. Respond ONLY with this JSON: {"checks":[{"id":"credentials-permissions","pass":true,"detail":"Permissions are 700 (owner-only)"}]} — set pass to false if permissions are not 700.',
                                 failHint:
                                     'The credentials file is readable by other users. Run chmod 700 ~/.openclaw/credentials.',
                                 fixPrompt:
@@ -221,7 +209,7 @@ const m1: Module = {
                                 id: 'web-search-disabled',
                                 label: 'Web search is disabled',
                                 verifyPrompt:
-                                    'Ask the Claw: "Is web search enabled or disabled right now?" Respond with JSON: { "pass": true/false, "detail": "what it said" }',
+                                    'Is web search currently enabled or disabled in your tool settings? Respond ONLY with this JSON: {"checks":[{"id":"web-search-disabled","pass":true,"detail":"Web search is disabled"}]} — set pass to false if web search is enabled.',
                                 failHint:
                                     'Web search defaults to enabled. Ask the Claw to disable it in the tool policy settings.',
                                 fixPrompt:
@@ -231,7 +219,7 @@ const m1: Module = {
                                 id: 'heartbeat-zero',
                                 label: 'Heartbeat set to 0m',
                                 verifyPrompt:
-                                    'Ask the Claw: "What is the current heartbeat setting?" Respond with JSON: { "pass": true/false, "detail": "the value shown" }',
+                                    'What is the current heartbeat interval setting? Respond ONLY with this JSON: {"checks":[{"id":"heartbeat-zero","pass":true,"detail":"Heartbeat is 0m (disabled)"}]} — set pass to false if the heartbeat is not 0m.',
                             },
                         ],
                     },
