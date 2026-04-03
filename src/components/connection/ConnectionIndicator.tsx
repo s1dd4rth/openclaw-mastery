@@ -1,4 +1,4 @@
-import { Wifi, WifiOff } from 'lucide-react';
+import { Wifi, X } from 'lucide-react';
 
 interface ConnectionIndicatorProps {
   isConnected: boolean;
@@ -24,7 +24,7 @@ export const ConnectionIndicator = ({
           className="text-xs text-emerald-600 hover:text-emerald-800 ml-auto"
           title="Disconnect"
         >
-          <WifiOff size={12} />
+          <X size={12} />
         </button>
       </div>
     );

@@ -176,7 +176,7 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
                     mode: 'cli',
                   },
                   role: 'operator',
-                  scopes: ['operator.read', 'operator.write', 'operator.admin'],
+                  scopes: ['operator.admin', 'operator.read', 'operator.write', 'operator.approvals', 'operator.pairing'],
                   auth: { token: sessionToken },
                 },
               };
