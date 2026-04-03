@@ -82,7 +82,7 @@ const m1: Module = {
                         'Before moving to security hardening, confirm your Claw is live and responding. This is your first interaction with it. The Claw should respond in the web chat interface that Hostinger provides.',
                     do: {
                         prompt:
-                            'Hello! Can you confirm you are running? Tell me your current status — what model you are using, and what your gateway address is.',
+                            'Hello! I just finished setting up your VPS. Can you say hi and confirm everything is working?',
                     },
                     verify: {
                         checks: [
