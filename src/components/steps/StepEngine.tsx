@@ -19,6 +19,7 @@ interface StepEngineProps {
   onFix: (fixPrompt: string, stepId: string, checks: Array<{ id: string; verifyPrompt: string }>) => void;
   onRecheckSingle: (stepId: string, checkId: string, verifyPrompt: string) => void;
   onSkip: (stepId: string) => void;
+  onMarkComplete: (stepId: string) => void;
   onSaveInput: (key: string, value: string) => void;
   onNavigateStep: (index: number) => void;
 }
@@ -36,6 +37,7 @@ export const StepEngine = ({
   onFix,
   onRecheckSingle,
   onSkip,
+  onMarkComplete,
   onSaveInput,
   onNavigateStep,
 }: StepEngineProps) => {
@@ -110,6 +112,16 @@ export const StepEngine = ({
               }}
               onSkip={() => onSkip(step.id)}
             />
+          )}
+
+          {/* Mark as done button for learn-only steps (no do/verify) */}
+          {!step.do && !step.verify && !completedSteps[currentIndex] && (
+            <button
+              onClick={() => onMarkComplete(step.id)}
+              className="w-full py-3 bg-openclaw-red text-white rounded-xl font-semibold text-sm hover:bg-red-600 transition-colors"
+            >
+              I've done this — continue
+            </button>
           )}
 
           {/* Navigation between steps */}

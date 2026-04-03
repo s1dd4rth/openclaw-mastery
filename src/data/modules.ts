@@ -65,18 +65,24 @@ const m1: Module = {
             steps: [
                 {
                     id: 'get-api-key',
-                    title: 'Set Up Your VPS and API Key',
+                    title: 'Get Your API Key',
                     learn:
-                        'OpenClaw runs on a VPS (Virtual Private Server) and connects to an AI model through an API key. You will set up both through the Hostinger dashboard. The API key is a secret credential, so your Claw is designed to never display or handle it directly. You will enter it yourself during the VPS setup wizard.',
+                        'OpenClaw connects to an AI model provider (OpenAI, Google, or Anthropic) through an API key. This is separate from a ChatGPT or Claude subscription. Having a subscription does not automatically give you an API key — you need to generate one specifically.\n\n**Cost guidance:** Set aside $20–30 for API usage during this course. If you have a ChatGPT Plus or Pro subscription, OpenAI lets you connect OpenClaw via OAuth so usage draws from your subscription instead.\n\n**Choose your provider and follow the steps:**\n\n- **OpenAI (GPT):** Go to [platform.openai.com](https://platform.openai.com) → API Keys → Create new secret key. Add billing ($20+).\n- **Google (Gemini):** Go to [aistudio.google.com](https://aistudio.google.com) → Get API Key → Create Key. Free tier available, no credit card needed.\n- **Anthropic (Claude):** Go to [console.anthropic.com](https://console.anthropic.com) → Settings → API Keys → Create Key. Add billing.\n\nCopy your key and keep it safe. You will paste it into the Hostinger setup wizard in the next step.',
+                },
+                {
+                    id: 'create-vps',
+                    title: 'Create Your VPS on Hostinger',
+                    learn:
+                        'OpenClaw runs on a VPS (Virtual Private Server) — a dedicated machine in the cloud that stays on 24/7. Hostinger offers a one-click OpenClaw template that handles all the server setup for you.\n\n**Follow these steps:**\n\n1. Go to [Hostinger OpenClaw setup](https://levelup-labs.ai/HOSTINGER-OPENCLAW) and create an account\n2. Watch the setup video: [youtu.be/JXWmkPCcF7E](https://youtu.be/JXWmkPCcF7E)\n3. Choose a VPS plan and select the OpenClaw template\n4. Paste your API key when the setup wizard asks for it\n5. Wait for the VPS to finish deploying (1–3 minutes)\n\nOnce deployment finishes, you will see a web chat interface. Type a message. If your Claw responds, the deploy is complete.',
+                },
+                {
+                    id: 'verify-claw-running',
+                    title: 'Verify Your Claw Is Running',
+                    learn:
+                        'Before moving to security hardening, confirm your Claw is live and responding. This is your first interaction with it. The Claw should respond in the web chat interface that Hostinger provides.',
                     do: {
                         prompt:
-                            'I just set up my OpenClaw VPS and entered my API key through the Hostinger setup wizard. Can you confirm you are running and able to respond? Just say hello and tell me your current status.',
-                        instructionUrl: `${INSTRUCTION_BASE}day01-deploy.md`,
-                        requiresInput: {
-                            label: 'Your OpenClaw instance URL',
-                            placeholder: 'https://your-vps-ip:4000',
-                            storeAs: 'instanceUrl',
-                        },
+                            'Hello! Can you confirm you are running? Tell me your current status — what model you are using, and what your gateway address is.',
                     },
                     verify: {
                         checks: [
@@ -93,13 +99,12 @@ const m1: Module = {
                 },
                 {
                     id: 'give-claw-name',
-                    title: 'Give Claw a Name',
+                    title: 'Name Your Claw',
                     learn:
-                        'Naming your Claw is more than cosmetic: it sets the agent identity used in logs, Telegram messages, and multi-agent routing. A consistent name makes it easy to tell at a glance which agent sent a message or wrote a file. It also gives the agent a sense of self that improves its consistency in long conversations.',
+                        'Your Claw will ask for your name, and you get to name it. The name persists across all future sessions, shows up in logs, Telegram messages, and multi-agent routing later. Call it whatever you want.',
                     do: {
                         prompt:
-                            'Tell your Claw its name by typing: "Your name is [Name]. Update your identity settings now." Confirm it echoes the name back.',
-                        instructionUrl: `${INSTRUCTION_BASE}m1-give-claw-name.md`,
+                            'I would like to give you a name. What would you suggest? After we decide, please save it to your identity settings.',
                     },
                     verify: {
                         checks: [
@@ -107,11 +112,11 @@ const m1: Module = {
                                 id: 'claw-has-name',
                                 label: 'Claw has a name',
                                 verifyPrompt:
-                                    'Ask the Claw: "What is your name?" Respond with JSON: { "pass": true/false, "detail": "the name it gave" }',
+                                    'What is your name? Respond ONLY with this JSON: {"checks":[{"id":"claw-has-name","pass":true,"detail":"My name is [YOUR_NAME]"}]} — set pass to false if you do not have a name configured.',
                                 failHint:
-                                    'The name may not have been persisted. Try asking it to save its name to SOUL.md.',
+                                    'The name may not have been persisted. Ask your Claw to save its name to SOUL.md.',
                                 fixPrompt:
-                                    'Tell the Claw: "Save your name to SOUL.md under the Identity section now."',
+                                    'Save your name to SOUL.md under the Identity section.',
                             },
                         ],
                     },
@@ -127,11 +132,11 @@ const m1: Module = {
                     id: 'run-audit',
                     title: 'Run Security Audit',
                     learn:
-                        'OpenClaw ships with a built-in security audit that scans your gateway configuration for common weaknesses: open ports, world-readable credential files, missing token auth, and more. Running the audit before anything else gives you a baseline and catches problems introduced during install. You want zero critical failures before moving on.',
+                        'OpenClaw ships with a built-in security audit that scans your gateway configuration for common weaknesses: open ports, world-readable credential files, missing token auth, and more. Running the audit before anything else gives you a baseline and catches problems introduced during install. You want zero critical failures before moving on.\n\nThe audit covers 10 checks: OS info, open ports, firewall status, OpenClaw security audit, gateway bind address, credential file permissions, channel configuration, web search status, heartbeat interval, and a final restart. Each check reports PASS, FAIL, or EXPECTED.',
                     do: {
                         prompt:
-                            'In the web chat, type: "Run the OpenClaw security audit and fix any critical failures." Wait for it to finish and show you the results.',
-                        instructionUrl: `${INSTRUCTION_BASE}m1-security-audit.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-01-install-secure/claw-instructions-security.md and follow every step. Report the result of each check and fix anything that fails.',
+                        instructionUrl: 'https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-01-install-secure/claw-instructions-security.md',
                     },
                     verify: {
                         checks: [

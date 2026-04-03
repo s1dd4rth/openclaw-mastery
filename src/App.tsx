@@ -223,6 +223,7 @@ export default function App() {
               onFix={handleFix}
               onRecheckSingle={handleRecheckSingle}
               onSkip={stepId => skipStep(nav.moduleId, nav.phaseId, stepId)}
+              onMarkComplete={stepId => markStepComplete(nav.moduleId, nav.phaseId, stepId)}
               onSaveInput={saveUserInput}
               onNavigateStep={index => setNav({ stepIndex: index })}
             />
