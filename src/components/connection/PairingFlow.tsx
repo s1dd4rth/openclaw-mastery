@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Loader2, Shield } from 'lucide-react';
 
 interface PairingFlowProps {
-  onConnect: (instanceUrl: string, token: string) => Promise<void>;
+  onConnect: (instanceUrl: string, token: string) => void;
   isConnecting: boolean;
   connectionError: string | null;
   onClose: () => void;

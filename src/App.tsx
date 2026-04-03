@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MODULES_DATA } from './data/modules';
 import { useConnection } from './hooks/useConnection';
 import { useStepProgress } from './hooks/useStepProgress';
@@ -33,6 +33,13 @@ export default function App() {
   const [moduleDropdownOpen, setModuleDropdownOpen] = useState(false);
   const [showPairing, setShowPairing] = useState(false);
   const [mobileOverride, setMobileOverride] = useState(false);
+
+  // Auto-close pairing modal on successful connection
+  useEffect(() => {
+    if (isConnected && showPairing) {
+      setShowPairing(false);
+    }
+  }, [isConnected, showPairing]);
 
   // ── Derived ─────────────────────────────────────────────────────────
   const currentModule = MODULES_DATA.find(m => m.id === nav.moduleId) ?? MODULES_DATA[0]!;

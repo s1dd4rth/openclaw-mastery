@@ -42,65 +42,55 @@ export function useConnection() {
     setIsLoaded(true);
   }, []);
 
-  // Connect WebSocket when connection state is set
+  // Single connection effect — connects when connection state exists
   useEffect(() => {
     if (!connection) {
       setIsConnected(false);
+      setIsConnecting(false);
+      clientRef.current = null;
       return;
     }
 
     const client = createOpenClawClient(connection);
     clientRef.current = client;
-
     let cancelled = false;
 
-    (async () => {
-      try {
-        await client.connect();
-        if (!cancelled) {
-          setIsConnected(true);
-          setConnectionError(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setIsConnected(false);
-          setConnectionError(err instanceof Error ? err.message : 'Connection failed');
-        }
+    setIsConnecting(true);
+    setConnectionError(null);
+
+    client.connect().then(() => {
+      if (!cancelled) {
+        console.log('[useConnection] Connected successfully');
+        setIsConnected(true);
+        setIsConnecting(false);
+        setConnectionError(null);
       }
-    })();
+    }).catch((err) => {
+      if (!cancelled) {
+        console.error('[useConnection] Connection failed:', err);
+        setIsConnected(false);
+        setIsConnecting(false);
+        setConnectionError(err instanceof Error ? err.message : 'Connection failed');
+      }
+    });
 
     return () => {
       cancelled = true;
       client.disconnect();
       clientRef.current = null;
-      setIsConnected(false);
     };
   }, [connection]);
 
-  const connect = useCallback(async (instanceUrl: string, token: string) => {
-    setIsConnecting(true);
-    setConnectionError(null);
-
+  // Save and connect — no test connection, just set state and let the effect handle it
+  const connect = useCallback((instanceUrl: string, token: string) => {
     const state: ConnectionState = {
       instanceUrl,
       sessionToken: token,
       clawName: '',
       pairedAt: new Date().toISOString(),
     };
-
-    // Try connecting before saving to validate the URL + token
-    const testClient = createOpenClawClient(state);
-    try {
-      await testClient.connect();
-      testClient.disconnect();
-      // Connection works — save and set state (the useEffect will reconnect)
-      setConnection(state);
-      saveConnection(state);
-    } catch (err) {
-      setConnectionError(err instanceof Error ? err.message : 'Connection failed');
-    } finally {
-      setIsConnecting(false);
-    }
+    saveConnection(state);
+    setConnection(state);
   }, []);
 
   const disconnect = useCallback(() => {
