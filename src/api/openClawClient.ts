@@ -266,33 +266,45 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
     },
 
     async sendMessage(message: string): Promise<string> {
-      console.log('[OpenClaw] Sending message:', { message: message.slice(0, 100), sessionKey: mainSessionKey });
+      console.log('[OpenClaw] Sending message:', message.slice(0, 100));
 
-      // Try sessions.send first (may have different scope requirements)
-      let res: ProtocolResponse;
-      try {
-        res = await sendRequest('sessions.send', {
-          sessionKey: mainSessionKey,
-          message: { role: 'user', content: message },
-        });
-      } catch (e) {
-        console.log('[OpenClaw] sessions.send failed, trying chat.send...', e);
-        // Fallback to chat.send
-        res = await sendRequest('chat.send', {
-          message,
-          sessionKey: mainSessionKey,
-        });
+      // Try multiple methods to find one that works with our scope level
+      const methods = [
+        { name: 'chat.send', params: { message, sessionKey: mainSessionKey } },
+        { name: 'sessions.send', params: { sessionKey: mainSessionKey, message: { role: 'user', content: message } } },
+        { name: 'send', params: { message, sessionKey: mainSessionKey } },
+        { name: 'agent', params: { message, agentId: 'main', sessionKey: mainSessionKey } },
+      ];
+
+      for (const method of methods) {
+        try {
+          console.log(`[OpenClaw] Trying ${method.name}...`);
+          const res = await sendRequest(method.name, method.params);
+
+          if (res.ok) {
+            console.log(`[OpenClaw] ${method.name} succeeded:`, Object.keys(res.payload ?? {}));
+            const payload = res.payload ?? {};
+            return (payload.response ?? payload.message ?? payload.text ?? payload.content ?? JSON.stringify(payload)) as string;
+          }
+
+          const errMsg = (res.error as any)?.message ?? 'failed';
+          console.log(`[OpenClaw] ${method.name} rejected: ${errMsg}`);
+          // If it's a scope error, try the next method
+          if (errMsg.includes('scope')) continue;
+          // For other errors, throw
+          throw new Error(errMsg);
+        } catch (e) {
+          if (e instanceof Error && e.message.includes('scope')) {
+            console.log(`[OpenClaw] ${method.name} scope error, trying next...`);
+            continue;
+          }
+          // For non-scope errors on last method, throw
+          if (method === methods[methods.length - 1]) throw e;
+          console.log(`[OpenClaw] ${method.name} error:`, e);
+        }
       }
 
-      if (!res.ok) {
-        const errMsg = (res.error as any)?.message ?? (res.error as any)?.details?.reason ?? 'send failed';
-        console.error('[OpenClaw] send error:', JSON.stringify(res.error, null, 2));
-        throw new Error(errMsg);
-      }
-
-      console.log('[OpenClaw] send response keys:', Object.keys(res.payload ?? {}));
-      const payload = res.payload ?? {};
-      return (payload.response ?? payload.message ?? payload.text ?? payload.content ?? JSON.stringify(payload)) as string;
+      throw new Error('All send methods failed — check gateway scopes');
     },
 
     async sendVerify(prompt: string): Promise<VerifyResponse | null> {
