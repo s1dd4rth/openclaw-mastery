@@ -139,9 +139,10 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
               minProtocol: 3,
               maxProtocol: 3,
               client: {
-                id: 'control-ui',
+                id: 'cli',
                 version: '1.0.0',
-                platform: 'web',
+                platform: 'macos',
+                mode: 'operator',
               },
               role: 'operator',
               scopes: ['operator.read', 'operator.write'],
