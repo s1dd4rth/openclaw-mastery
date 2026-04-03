@@ -67,11 +67,8 @@ export default function App() {
     setNav({ phaseId, stepIndex: 0 });
   };
 
-  // Execute: copies prompt to clipboard and opens Control UI in a new tab.
-  // The actual copy + window.open happens in StepDo; this is called as a
-  // side-effect notification (no-op here but kept for future instrumentation).
+  // Execute: copies prompt to clipboard. The user pastes it in their existing Claw chat.
   const handleExecute = (_prompt: string, _stepTitle: string) => {
-    // Side-effects handled inside StepDo (clipboard + window.open).
     // Optionally trigger a history refresh after a short delay so the
     // chat panel shows the newly sent message once the user types it.
     setTimeout(() => fetchHistory(), 8000);
@@ -110,11 +107,10 @@ export default function App() {
     stepId: string,
     checks: Array<{ id: string; verifyPrompt: string }>,
   ) => {
-    // Copy fix prompt + open Control UI for the user to paste
+    // Copy fix prompt for the user to paste in their Claw chat
     try {
       await navigator.clipboard.writeText(fixPrompt);
     } catch { /* ignore */ }
-    window.open(controlUiUrl, '_blank');
     // After a delay, re-check
     setTimeout(() => handleRunChecks(stepId, checks), 10000);
   };
@@ -219,7 +215,6 @@ export default function App() {
               onValidateAll={handleValidateAll}
               onFix={async (fixPrompt) => {
                 try { await navigator.clipboard.writeText(fixPrompt); } catch { /* ignore */ }
-                window.open(controlUiUrl, '_blank');
                 setTimeout(() => handleValidateAll(), 10000);
               }}
               onRecheck={async (checkId) => {
