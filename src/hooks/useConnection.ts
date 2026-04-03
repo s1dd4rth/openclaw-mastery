@@ -82,10 +82,11 @@ export function useConnection() {
   }, [connection]);
 
   // Save and connect — no test connection, just set state and let the effect handle it
-  const connect = useCallback((instanceUrl: string, token: string) => {
+  const connect = useCallback((instanceUrl: string, token: string, password?: string) => {
     const state: ConnectionState = {
       instanceUrl,
       sessionToken: token,
+      ...(password ? { password } : {}),
       clawName: '',
       pairedAt: new Date().toISOString(),
     };

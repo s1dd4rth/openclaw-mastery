@@ -45,6 +45,7 @@ export interface Module {
 export interface ConnectionState {
   instanceUrl: string;
   sessionToken: string;
+  password?: string;
   clawName: string;
   pairedAt: string;
 }

@@ -124,7 +124,7 @@ async function signNonce(device: StoredDevice, nonce: string): Promise<string> {
 // ── Client factory ──────────────────────────────────────────────────────────
 
 export function createOpenClawClient(connection: ConnectionState): OpenClawClient {
-  const { instanceUrl, sessionToken } = connection;
+  const { instanceUrl, sessionToken, password } = connection;
 
   let ws: WebSocket | null = null;
   let connected = false;
@@ -249,7 +249,10 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
                   },
                   role: 'operator',
                   scopes: ['operator.admin', 'operator.read', 'operator.write', 'operator.approvals', 'operator.pairing'],
-                  auth: { token: sessionToken },
+                  auth: {
+                    ...(sessionToken ? { token: sessionToken } : {}),
+                    ...(password ? { password } : {}),
+                  },
                 },
               };
 

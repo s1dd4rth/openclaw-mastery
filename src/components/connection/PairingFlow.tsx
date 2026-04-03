@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Loader2, Shield } from 'lucide-react';
 
 interface PairingFlowProps {
-  onConnect: (instanceUrl: string, token: string) => void;
+  onConnect: (instanceUrl: string, token: string, password?: string) => void;
   isConnecting: boolean;
   connectionError: string | null;
   onClose: () => void;
@@ -16,11 +16,12 @@ export const PairingFlow = ({
 }: PairingFlowProps) => {
   const [url, setUrl] = useState('');
   const [token, setToken] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (url && token) {
-      onConnect(url, token);
+    if (url && (token || password)) {
+      onConnect(url, token, password || undefined);
     }
   };
 
@@ -40,17 +41,9 @@ export const PairingFlow = ({
           <div className="flex items-start gap-3">
             <Shield size={20} className="text-openclaw-red mt-0.5 flex-shrink-0" />
             <div className="text-sm text-slate-600 space-y-2">
-              <p className="font-medium text-slate-800">You need two things from Module 1</p>
+              <p className="font-medium text-slate-800">Connect to your OpenClaw gateway</p>
               <p>
-                Your <strong>gateway URL</strong> (e.g., <code className="bg-slate-200 px-1 py-0.5 rounded text-xs font-mono">http://your-vps-ip:18789</code>)
-                and your <strong>gateway token</strong>.
-              </p>
-              <p className="text-xs text-slate-500">
-                First time? Tell your Claw:{' '}
-                <code className="bg-slate-200 px-1 py-0.5 rounded font-mono">
-                  Add this course app's origin to gateway.controlUi.allowedOrigins
-                </code>{' '}
-                and approve the device when prompted.
+                Enter your <strong>gateway URL</strong> and either a <strong>token</strong> or <strong>password</strong> (whichever your gateway uses).
               </p>
             </div>
           </div>
@@ -66,7 +59,7 @@ export const PairingFlow = ({
               type="url"
               value={url}
               onChange={e => setUrl(e.target.value)}
-              placeholder="https://your-claw.example.com"
+              placeholder="https://openclaw-xxx.srv.hstgr.cloud"
               required
               className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-openclaw-red/30 focus:border-openclaw-red"
             />
@@ -81,11 +74,23 @@ export const PairingFlow = ({
               value={token}
               onChange={e => setToken(e.target.value)}
               placeholder="Your gateway auth token"
-              required
               className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-openclaw-red/30 focus:border-openclaw-red"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Gateway Password <span className="text-slate-400 font-normal">(if set)</span>
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Your gateway password"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-openclaw-red/30 focus:border-openclaw-red"
+            />
             <p className="text-xs text-slate-400 mt-1">
-              Stored locally in your browser. Never sent anywhere except your own gateway.
+              Stored locally in your browser only. Password auth may grant full access.
             </p>
           </div>
 
@@ -97,7 +102,7 @@ export const PairingFlow = ({
 
           <button
             type="submit"
-            disabled={isConnecting || !url || !token}
+            disabled={isConnecting || !url || (!token && !password)}
             className="w-full py-2.5 bg-openclaw-red text-white rounded-lg font-semibold text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {isConnecting ? (
