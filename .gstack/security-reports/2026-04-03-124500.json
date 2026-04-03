@@ -1,0 +1,98 @@
+{
+  "version": "2.0.0",
+  "date": "2026-04-03T12:45:00Z",
+  "mode": "daily",
+  "scope": "full",
+  "diff_mode": false,
+  "phases_run": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+  "attack_surface": {
+    "code": { "public_endpoints": 0, "authenticated": 0, "admin": 0, "api": 0, "uploads": 0, "integrations": 0, "background_jobs": 0, "websockets": 0 },
+    "infrastructure": { "ci_workflows": 1, "webhook_receivers": 0, "container_configs": 0, "iac_configs": 0, "deploy_targets": 1, "secret_management": "none_needed" }
+  },
+  "findings": [
+    {
+      "id": 1,
+      "severity": "MEDIUM",
+      "confidence": 10,
+      "status": "VERIFIED",
+      "phase": 2,
+      "phase_name": "Secrets Archaeology",
+      "category": "Git Hygiene",
+      "fingerprint": "git-hygiene-node-modules-tracked",
+      "title": "node_modules/ committed to git despite .gitignore",
+      "file": ".gitignore",
+      "line": 1,
+      "description": "6453 files from node_modules/ are tracked in git. Initial commit was made before .gitignore existed.",
+      "exploit_scenario": "Bloats repo, exposes internal dependency code, could contain cached credentials or metadata.",
+      "impact": "Repo size, potential metadata exposure",
+      "recommendation": "Run: git rm -r --cached node_modules/ && git commit -m 'chore: remove tracked node_modules'"
+    },
+    {
+      "id": 2,
+      "severity": "LOW",
+      "confidence": 10,
+      "status": "VERIFIED",
+      "phase": 2,
+      "phase_name": "Secrets Archaeology",
+      "category": "Git Hygiene",
+      "fingerprint": "git-hygiene-dist-tracked",
+      "title": "dist/ build artifacts committed to git",
+      "file": ".gitignore",
+      "line": 2,
+      "description": "Build artifacts tracked in git. CI/CD builds fresh from source.",
+      "exploit_scenario": "Stale artifacts could contain outdated code with different security properties than source.",
+      "impact": "Confusing diffs, stale code",
+      "recommendation": "Run: git rm -r --cached dist/ && git commit -m 'chore: remove tracked dist'"
+    },
+    {
+      "id": 3,
+      "severity": "MEDIUM",
+      "confidence": 9,
+      "status": "VERIFIED",
+      "phase": 4,
+      "phase_name": "CI/CD Pipeline Security",
+      "category": "CI/CD",
+      "fingerprint": "cicd-unpinned-actions-deploy-yml",
+      "title": "Unpinned GitHub Actions in deploy workflow",
+      "file": ".github/workflows/deploy.yml",
+      "line": 24,
+      "description": "All 5 actions use tag references (v4, v1, v3) instead of SHA pins. Third-party oven-sh/setup-bun@v1 is highest risk.",
+      "exploit_scenario": "Attacker compromises upstream action repo, force-pushes malicious code to the v1 tag. Next deploy runs the compromised action with write access to GitHub Pages.",
+      "impact": "Supply chain attack on deploy pipeline",
+      "recommendation": "Pin all actions to full commit SHAs."
+    },
+    {
+      "id": 4,
+      "severity": "MEDIUM",
+      "confidence": 10,
+      "status": "VERIFIED",
+      "phase": 2,
+      "phase_name": "Secrets Archaeology",
+      "category": "Git Hygiene",
+      "fingerprint": "git-hygiene-missing-env-gitignore",
+      "title": ".gitignore missing .env patterns",
+      "file": ".gitignore",
+      "line": 0,
+      "description": "No .env, .env.*, or .env.local patterns in .gitignore. Accidental commit of environment files possible.",
+      "exploit_scenario": "Developer creates .env with API keys, runs git add -A, keys end up in public repo.",
+      "impact": "Credential exposure prevention",
+      "recommendation": "Add .env, .env.*, .env.local, .env.*.local to .gitignore"
+    }
+  ],
+  "supply_chain_summary": {
+    "direct_deps": 7, "transitive_deps": 189,
+    "critical_cves": 0, "high_cves": 0,
+    "install_scripts": 0, "lockfile_present": true, "lockfile_tracked": true,
+    "tools_skipped": []
+  },
+  "filter_stats": {
+    "candidates_scanned": 4, "hard_exclusion_filtered": 0,
+    "confidence_gate_filtered": 0, "verification_filtered": 0, "reported": 4
+  },
+  "totals": { "critical": 0, "high": 0, "medium": 3, "low": 1, "tentative": 0 },
+  "trend": {
+    "prior_report_date": null,
+    "resolved": 0, "persistent": 0, "new": 4,
+    "direction": "first_run"
+  }
+}
