@@ -139,10 +139,9 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
               minProtocol: 3,
               maxProtocol: 3,
               client: {
-                id: 'openclaw-mastery',
-                version: '2.0.0',
+                id: 'control-ui',
+                version: '1.0.0',
                 platform: 'web',
-                mode: 'operator',
               },
               role: 'operator',
               scopes: ['operator.read', 'operator.write'],
@@ -204,10 +203,8 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
             }
           };
 
-          // Try sending connect immediately; if server sends challenge first,
-          // the challenge handler will re-send after receiving it
+          // Wait for server challenge before sending connect
           ws!.addEventListener('message', onChallenge);
-          ws!.send(JSON.stringify(connectReq));
         };
 
         ws.onerror = (err) => {
