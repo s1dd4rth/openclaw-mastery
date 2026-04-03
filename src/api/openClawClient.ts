@@ -125,9 +125,11 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
     connect(): Promise<void> {
       return new Promise((resolve, reject) => {
         const wsUrl = getWsUrl();
+        console.log('[OpenClaw] Connecting to:', wsUrl);
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
+          console.log('[OpenClaw] WebSocket open, sending handshake...');
           // Send connect handshake
           const connectReq: ProtocolRequest = {
             type: 'req',
@@ -148,12 +150,21 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
             },
           };
 
+          console.log('[OpenClaw] Connect request:', JSON.stringify(connectReq.params, null, 2));
+
+          // Log ALL incoming messages for debugging
+          const debugLog = (label: string, event: MessageEvent) => {
+            console.log(`[OpenClaw ${label}]`, event.data);
+          };
+
           // Listen for the hello-ok response
           const onFirstMessage = (event: MessageEvent) => {
+            debugLog('handshake-response', event);
             let msg: ProtocolResponse;
             try {
               msg = JSON.parse(event.data);
             } catch {
+              console.warn('[OpenClaw] Non-JSON response:', event.data);
               return;
             }
 
@@ -161,13 +172,16 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
               ws!.removeEventListener('message', onFirstMessage);
               if (msg.ok) {
                 connected = true;
-                // Switch to normal message handling
                 ws!.onmessage = (e) => handleMessage(e.data);
                 resolve();
               } else {
+                console.error('[OpenClaw] Connection rejected:', JSON.stringify(msg, null, 2));
                 const reason = msg.error?.details?.reason ?? 'Connection rejected';
-                reject(new Error(reason));
+                const code = msg.error?.details?.code ?? 'UNKNOWN';
+                reject(new Error(`${reason} (${code})`));
               }
+            } else {
+              console.log('[OpenClaw] Unexpected message during handshake:', JSON.stringify(msg, null, 2));
             }
           };
 
@@ -175,6 +189,7 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
 
           // Handle challenge event (server may send nonce first)
           const onChallenge = (event: MessageEvent) => {
+            debugLog('challenge', event);
             let msg: ProtocolEvent;
             try {
               msg = JSON.parse(event.data);
@@ -182,7 +197,7 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
               return;
             }
             if (msg.type === 'event' && msg.event === 'connect.challenge') {
-              // For token-only auth, we send connect after receiving challenge
+              console.log('[OpenClaw] Received challenge, sending connect request...');
               ws!.removeEventListener('message', onChallenge);
               ws!.addEventListener('message', onFirstMessage);
               ws!.send(JSON.stringify(connectReq));
@@ -195,11 +210,13 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
           ws!.send(JSON.stringify(connectReq));
         };
 
-        ws.onerror = () => {
+        ws.onerror = (err) => {
+          console.error('[OpenClaw] WebSocket error:', err);
           reject(new Error('Failed to connect to OpenClaw gateway'));
         };
 
-        ws.onclose = () => {
+        ws.onclose = (event) => {
+          console.log('[OpenClaw] WebSocket closed:', event.code, event.reason);
           connected = false;
           // Reject all pending requests
           for (const [id, handler] of pending) {
