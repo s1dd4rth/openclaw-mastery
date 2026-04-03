@@ -162,6 +162,12 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
               const payload = msg.payload as { nonce: string; ts: number };
               console.log('[OpenClaw] Got challenge, sending connect with nonce...');
 
+              // Generate a stable device ID from the token (deterministic per connection)
+              const deviceId = await crypto.subtle.digest(
+                'SHA-256',
+                new TextEncoder().encode('openclaw-mastery-' + sessionToken),
+              ).then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''));
+
               const connectReq: ProtocolRequest = {
                 type: 'req',
                 id: nextReqId(),
@@ -178,6 +184,13 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
                   role: 'operator',
                   scopes: ['operator.admin', 'operator.read', 'operator.write', 'operator.approvals', 'operator.pairing'],
                   auth: { token: sessionToken },
+                  device: {
+                    id: deviceId,
+                    publicKey: btoa('openclaw-mastery-companion'),
+                    signature: btoa(payload.nonce + ':' + Date.now()),
+                    signedAt: Date.now(),
+                    nonce: payload.nonce,
+                  },
                 },
               };
 
