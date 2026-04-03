@@ -13,11 +13,12 @@ export const ConnectionIndicator = ({
   onClickConnect,
   onClickDisconnect,
 }: ConnectionIndicatorProps) => {
-  if (isConnected && clawName) {
+  if (isConnected) {
+    const displayName = clawName || 'Connected';
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200">
         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="text-xs font-medium text-emerald-800 truncate">{clawName}</span>
+        <span className="text-xs font-medium text-emerald-800 truncate">{displayName}</span>
         <button
           onClick={onClickDisconnect}
           className="text-xs text-emerald-600 hover:text-emerald-800 ml-auto"

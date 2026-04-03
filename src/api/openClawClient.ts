@@ -57,6 +57,7 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
 
   let ws: WebSocket | null = null;
   let connected = false;
+  let mainSessionKey = 'agent:main:main'; // default, updated from hello-ok
   const pending = new Map<string, {
     resolve: (value: ProtocolResponse) => void;
     reject: (reason: Error) => void;
@@ -189,11 +190,16 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
             if (msg.type === 'res') {
               const res = msg as unknown as ProtocolResponse;
               if (res.ok) {
-                console.log('[OpenClaw] Connected!', JSON.stringify(res.payload, null, 2));
+                console.log('[OpenClaw] Connected!');
+                // Extract session key from snapshot
+                const snapshot = (res.payload as any)?.snapshot;
+                if (snapshot?.sessionDefaults?.mainSessionKey) {
+                  mainSessionKey = snapshot.sessionDefaults.mainSessionKey;
+                  console.log('[OpenClaw] Session key:', mainSessionKey);
+                }
                 if (!settled) {
                   settled = true;
                   connected = true;
-                  // Switch to normal message handling
                   ws!.onmessage = (e) => handleMessage(e.data);
                   resolve();
                 }
@@ -256,11 +262,21 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
     },
 
     async sendMessage(message: string): Promise<string> {
-      const res = await sendRequest('chat.send', { message });
+      console.log('[OpenClaw] Sending chat.send:', { message: message.slice(0, 100), sessionKey: mainSessionKey });
+
+      // Try chat.send with session key
+      const res = await sendRequest('chat.send', {
+        message,
+        sessionKey: mainSessionKey,
+      });
+
       if (!res.ok) {
-        throw new Error(res.error?.details?.reason ?? 'chat.send failed');
+        const errMsg = (res.error as any)?.message ?? (res.error as any)?.details?.reason ?? 'chat.send failed';
+        console.error('[OpenClaw] chat.send error:', JSON.stringify(res.error, null, 2));
+        throw new Error(errMsg);
       }
-      // Extract the response text from the payload
+
+      console.log('[OpenClaw] chat.send response:', JSON.stringify(res.payload, null, 2));
       const payload = res.payload ?? {};
       return (payload.response ?? payload.message ?? payload.text ?? JSON.stringify(payload)) as string;
     },
