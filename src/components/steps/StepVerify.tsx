@@ -1,26 +1,18 @@
-import { ShieldCheck, Loader2, SkipForward } from 'lucide-react';
+import { ShieldCheck, SkipForward } from 'lucide-react';
 import type { CheckItem, VerifyResult } from '../../data/types';
 import { CheckResult } from './CheckResult';
 
 interface StepVerifyProps {
   checks: CheckItem[];
   results: Record<string, VerifyResult> | undefined;
-  isConnected: boolean;
-  isSending: boolean;
-  onRunChecks: () => void;
-  onFix: (fixPrompt: string) => void;
-  onRecheckSingle: (checkId: string) => void;
+  onToggleCheck: (checkId: string) => void;
   onSkip: () => void;
 }
 
 export const StepVerify = ({
   checks,
   results,
-  isConnected,
-  isSending,
-  onRunChecks,
-  onFix,
-  onRecheckSingle,
+  onToggleCheck,
   onSkip,
 }: StepVerifyProps) => {
   const hasResults = results && Object.keys(results).length > 0;
@@ -34,23 +26,6 @@ export const StepVerify = ({
           <span className="text-sm font-semibold text-slate-700">Verify</span>
         </div>
         <div className="flex gap-2">
-          {isConnected && (
-            <button
-              onClick={onRunChecks}
-              disabled={isSending}
-              title="Reads recent chat history to look for verification results"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-medium hover:bg-slate-700 disabled:opacity-50 transition-colors"
-            >
-              {isSending ? (
-                <>
-                  <Loader2 size={12} className="animate-spin" />
-                  Checking...
-                </>
-              ) : (
-                'Check'
-              )}
-            </button>
-          )}
           {!allPassed && (
             <button
               onClick={onSkip}
@@ -73,25 +48,14 @@ export const StepVerify = ({
             detail={results?.[check.id]?.detail ?? ''}
             failHint={check.failHint}
             fixPrompt={check.fixPrompt}
-            isConnected={isConnected}
-            isSending={isSending}
-            onFix={check.fixPrompt ? () => onFix(check.fixPrompt!) : undefined}
-            onRecheck={() => onRecheckSingle(check.id)}
+            onToggle={() => onToggleCheck(check.id)}
           />
         ))}
       </div>
 
-      {!isConnected && (
-        <p className="text-xs text-slate-400 italic">
-          Connect your Claw to auto-verify, or check these manually.
-        </p>
-      )}
-
-      {isConnected && (
-        <p className="text-xs text-slate-400 italic">
-          Clicking "Check" reads recent chat history for verification results. Run your checks in the Claw Chat first, then click Check.
-        </p>
-      )}
+      <p className="text-xs text-slate-400 italic">
+        Click each check to toggle it pass / fail once you've verified it manually in Claw.
+      </p>
     </div>
   );
 };

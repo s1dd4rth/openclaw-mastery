@@ -3,7 +3,6 @@ import { ChevronDown, ChevronRight, GraduationCap } from 'lucide-react';
 import { MODULES_DATA } from '../../data/modules';
 import type { Module } from '../../data/types';
 import { LogoIcon } from '../ui/LogoIcon';
-import { ConnectionIndicator } from '../connection/ConnectionIndicator';
 
 interface SidebarProps {
   moduleDropdownOpen: boolean;
@@ -13,10 +12,6 @@ interface SidebarProps {
   onModuleChange: (moduleId: string) => void;
   onPhaseChange: (phaseId: string) => void;
   currentModule: Module;
-  isConnected: boolean;
-  clawName?: string;
-  onOpenPairing: () => void;
-  onDisconnect: () => void;
   completedModulesCount: number;
 }
 
@@ -28,10 +23,6 @@ export const Sidebar = ({
   onModuleChange,
   onPhaseChange,
   currentModule,
-  isConnected,
-  clawName,
-  onOpenPairing,
-  onDisconnect,
   completedModulesCount,
 }: SidebarProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -56,16 +47,6 @@ export const Sidebar = ({
           <span className="font-extrabold">OpenClaw</span>
           <span className="font-light ml-1 text-slate-500">Mastery</span>
         </span>
-      </div>
-
-      {/* Connection */}
-      <div className="px-4 pt-4">
-        <ConnectionIndicator
-          isConnected={isConnected}
-          clawName={clawName}
-          onClickConnect={onOpenPairing}
-          onClickDisconnect={onDisconnect}
-        />
       </div>
 
       {/* Module Selector */}

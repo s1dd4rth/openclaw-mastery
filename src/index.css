@@ -92,17 +92,17 @@
 .md-prose td { padding: 0.45rem 0.75rem; border: 1px solid #e2e8f0; color: #374151; }
 .md-prose tr:nth-child(even) td { background: #f8fafc; }
 
-/* ── Three-column app layout ─────────────────────────────────────────── */
+/* ── Two-column app layout ───────────────────────────────────────────── */
 .app-layout {
   display: grid;
-  grid-template-columns: 240px 1fr 320px;
+  grid-template-columns: 240px 1fr;
   height: 100vh;
   overflow: hidden;
 }
 
 @media (max-width: 1023px) {
   .app-layout {
-    grid-template-columns: 200px 1fr 280px;
+    grid-template-columns: 200px 1fr;
   }
 }
 
@@ -113,12 +113,4 @@
 
 .app-main {
   overflow-y: auto;
-}
-
-.app-chat {
-  overflow: hidden;
-  border-left: 1px solid #e2e8f0;
-  background: #f8fafc;
-  display: flex;
-  flex-direction: column;
 }

@@ -1,4 +1,4 @@
-import { ShieldCheck, Loader2 } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { CheckResult } from '../steps/CheckResult';
 
 interface DashboardCheck {
@@ -16,11 +16,7 @@ interface ValidationDashboardProps {
   total: number;
   passed: number;
   checks: DashboardCheck[];
-  isConnected: boolean;
-  isSending: boolean;
-  onValidateAll: () => void;
-  onFix: (fixPrompt: string) => void;
-  onRecheck: (checkId: string) => void;
+  onToggleCheck: (checkId: string) => void;
 }
 
 export const ValidationDashboard = ({
@@ -28,11 +24,7 @@ export const ValidationDashboard = ({
   total,
   passed,
   checks,
-  isConnected,
-  isSending,
-  onValidateAll,
-  onFix,
-  onRecheck,
+  onToggleCheck,
 }: ValidationDashboardProps) => {
   // Group checks by phase
   const byPhase = new Map<string, DashboardCheck[]>();
@@ -93,10 +85,7 @@ export const ValidationDashboard = ({
                     detail={check.detail}
                     failHint={check.failHint}
                     fixPrompt={check.fixPrompt}
-                    isConnected={isConnected}
-                    isSending={isSending}
-                    onFix={check.fixPrompt ? () => onFix(check.fixPrompt!) : undefined}
-                    onRecheck={() => onRecheck(check.checkId)}
+                    onToggle={() => onToggleCheck(check.checkId)}
                   />
                 ))}
               </div>
@@ -104,25 +93,9 @@ export const ValidationDashboard = ({
           );
         })}
 
-        {/* Actions */}
-        <div className="mt-6 flex justify-end gap-3">
-          {isConnected && (
-            <button
-              onClick={onValidateAll}
-              disabled={isSending}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 disabled:opacity-50 transition-colors"
-            >
-              {isSending ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Validating...
-                </>
-              ) : (
-                'Validate All'
-              )}
-            </button>
-          )}
-        </div>
+        <p className="text-xs text-slate-400 italic mt-4">
+          Click each check to toggle it pass / fail once you've verified it manually in Claw.
+        </p>
       </div>
     </div>
   );

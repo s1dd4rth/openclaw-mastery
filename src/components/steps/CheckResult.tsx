@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Circle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Circle } from 'lucide-react';
 
 interface CheckResultProps {
   label: string;
@@ -6,10 +6,7 @@ interface CheckResultProps {
   detail: string;
   failHint?: string;
   fixPrompt?: string;
-  isConnected: boolean;
-  isSending: boolean;
-  onFix?: () => void;
-  onRecheck?: () => void;
+  onToggle?: () => void;
 }
 
 export const CheckResult = ({
@@ -17,11 +14,7 @@ export const CheckResult = ({
   pass,
   detail,
   failHint,
-  fixPrompt,
-  isConnected,
-  isSending,
-  onFix,
-  onRecheck,
+  onToggle,
 }: CheckResultProps) => {
   const icon =
     pass === true ? <CheckCircle size={18} className="text-emerald-500" /> :
@@ -30,13 +23,17 @@ export const CheckResult = ({
 
   return (
     <div
+      onClick={onToggle}
+      role={onToggle ? 'button' : undefined}
+      tabIndex={onToggle ? 0 : undefined}
+      onKeyDown={onToggle ? (e) => { if (e.key === 'Enter' || e.key === ' ') onToggle(); } : undefined}
       className={`rounded-lg border p-3 transition-colors ${
         pass === true
           ? 'bg-emerald-50 border-emerald-200'
           : pass === false
           ? 'bg-red-50 border-red-200'
           : 'bg-white border-slate-200'
-      }`}
+      } ${onToggle ? 'cursor-pointer hover:opacity-80 select-none' : ''}`}
     >
       <div className="flex items-start gap-3">
         <div className="mt-0.5 flex-shrink-0">{icon}</div>
@@ -48,41 +45,20 @@ export const CheckResult = ({
             <p className="text-xs text-slate-500 mt-0.5">{detail}</p>
           )}
 
-          {/* Failure hint + actions */}
-          {pass === false && (
-            <div className="mt-2 space-y-2">
-              {failHint && (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
-                  {failHint}
-                </p>
-              )}
-              <div className="flex gap-2">
-                {fixPrompt && isConnected && onFix && (
-                  <button
-                    onClick={onFix}
-                    disabled={isSending}
-                    className="text-xs px-3 py-1 bg-openclaw-red text-white rounded font-medium hover:bg-red-600 disabled:opacity-50 transition-colors"
-                  >
-                    Fix This
-                  </button>
-                )}
-                {isConnected && onRecheck && (
-                  <button
-                    onClick={onRecheck}
-                    disabled={isSending}
-                    className="text-xs px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
-                  >
-                    {isSending ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : (
-                      'Re-check'
-                    )}
-                  </button>
-                )}
-              </div>
+          {/* Failure hint */}
+          {pass === false && failHint && (
+            <div className="mt-2">
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                {failHint}
+              </p>
             </div>
           )}
         </div>
+        {onToggle && (
+          <div className="text-xs text-slate-400 flex-shrink-0 mt-0.5">
+            click to toggle
+          </div>
+        )}
       </div>
     </div>
   );

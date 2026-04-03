@@ -9,16 +9,11 @@ interface StepEngineProps {
   currentIndex: number;
   moduleId: string;
   phaseId: string;
-  isConnected: boolean;
-  isSending: boolean;
   userInputs: Record<string, string>;
-  controlUiUrl: string;
   getVerifyResults: (stepId: string) => Record<string, VerifyResult> | undefined;
   isStepComplete: (stepId: string) => boolean;
   onExecute: (prompt: string, stepTitle: string) => void;
-  onRunChecks: (stepId: string, checks: Array<{ id: string; verifyPrompt: string }>) => void;
-  onFix: (fixPrompt: string, stepId: string, checks: Array<{ id: string; verifyPrompt: string }>) => void;
-  onRecheckSingle: (stepId: string, checkId: string, verifyPrompt: string) => void;
+  onToggleCheck: (stepId: string, checkId: string) => void;
   onSkip: (stepId: string) => void;
   onMarkComplete: (stepId: string) => void;
   onSaveInput: (key: string, value: string) => void;
@@ -28,16 +23,11 @@ interface StepEngineProps {
 export const StepEngine = ({
   steps,
   currentIndex,
-  isConnected,
-  isSending,
   userInputs,
-  controlUiUrl,
   getVerifyResults,
   isStepComplete,
   onExecute,
-  onRunChecks,
-  onFix,
-  onRecheckSingle,
+  onToggleCheck,
   onSkip,
   onMarkComplete,
   onSaveInput,
@@ -80,10 +70,7 @@ export const StepEngine = ({
               prompt={step.do.prompt}
               instructionUrl={step.do.instructionUrl}
               requiresInput={step.do.requiresInput}
-              isConnected={isConnected}
-              isSending={isSending}
               userInputs={userInputs}
-              controlUiUrl={controlUiUrl}
               onExecute={prompt => onExecute(prompt, step.title)}
               onSaveInput={onSaveInput}
             />
@@ -94,25 +81,7 @@ export const StepEngine = ({
             <StepVerify
               checks={step.verify.checks}
               results={getVerifyResults(step.id)}
-              isConnected={isConnected}
-              isSending={isSending}
-              onRunChecks={() =>
-                onRunChecks(
-                  step.id,
-                  step.verify!.checks.map(c => ({ id: c.id, verifyPrompt: c.verifyPrompt })),
-                )
-              }
-              onFix={fixPrompt =>
-                onFix(
-                  fixPrompt,
-                  step.id,
-                  step.verify!.checks.map(c => ({ id: c.id, verifyPrompt: c.verifyPrompt })),
-                )
-              }
-              onRecheckSingle={(checkId: string) => {
-                const check = step.verify!.checks.find(c => c.id === checkId);
-                if (check) onRecheckSingle(step.id, checkId, check.verifyPrompt);
-              }}
+              onToggleCheck={(checkId) => onToggleCheck(step.id, checkId)}
               onSkip={() => onSkip(step.id)}
             />
           )}

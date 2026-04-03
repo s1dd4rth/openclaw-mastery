@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Copy, Check, Loader2 } from 'lucide-react';
-import { CopyButton } from '../ui/CopyButton';
+import { Copy, Check } from 'lucide-react';
 
 interface StepDoProps {
   prompt: string;
@@ -10,10 +9,7 @@ interface StepDoProps {
     placeholder: string;
     storeAs: string;
   };
-  isConnected: boolean;
-  isSending: boolean;
   userInputs: Record<string, string>;
-  controlUiUrl: string;
   onExecute: (fullPrompt: string) => void;
   onSaveInput: (key: string, value: string) => void;
 }
@@ -22,8 +18,6 @@ export const StepDo = ({
   prompt,
   instructionUrl,
   requiresInput,
-  isConnected,
-  isSending,
   userInputs,
   onExecute,
   onSaveInput,
@@ -55,7 +49,7 @@ export const StepDo = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 5000);
     } catch {
-      // fallback handled by showing the prompt text for manual copy
+      // fallback: user can manually select the prompt text
     }
 
     onExecute(fullPrompt);
@@ -88,7 +82,7 @@ export const StepDo = ({
           <div className="flex items-center gap-3 w-full">
             <button
               onClick={handleCopyAndExecute}
-              disabled={isSending || (!!requiresInput && !inputValue)}
+              disabled={!!requiresInput && !inputValue}
               className="flex items-center gap-2 px-4 py-2 bg-openclaw-red text-white rounded-lg text-sm font-semibold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {copied ? (
@@ -99,7 +93,7 @@ export const StepDo = ({
               ) : (
                 <>
                   <Copy size={14} />
-                  Copy & Run in Claw
+                  Copy &amp; Run in Claw
                 </>
               )}
             </button>

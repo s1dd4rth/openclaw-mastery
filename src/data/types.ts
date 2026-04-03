@@ -42,14 +42,6 @@ export interface Module {
   phases: Phase[];
 }
 
-export interface ConnectionState {
-  instanceUrl: string;
-  sessionToken: string;
-  password?: string;
-  clawName: string;
-  pairedAt: string;
-}
-
 export interface VerifyResult {
   pass: boolean;
   detail: string;
@@ -76,12 +68,3 @@ export interface NavState {
   stepIndex: number;
 }
 
-export interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: number;
-  auto?: boolean;
-  stepTitle?: string;
-  hidden?: boolean;
-}
