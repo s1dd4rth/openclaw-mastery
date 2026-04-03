@@ -169,16 +169,14 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
                   minProtocol: 3,
                   maxProtocol: 3,
                   client: {
-                    id: 'custom-app',
-                    mode: 'control',
-                    platform: 'web',
+                    id: 'cli',
+                    version: '2026.3.28',
+                    platform: 'macos',
+                    mode: 'cli',
                   },
                   role: 'operator',
-                  scopes: ['operator.read', 'operator.write'],
+                  scopes: ['operator.read', 'operator.write', 'operator.admin'],
                   auth: { token: sessionToken },
-                  device: {
-                    nonce: payload.nonce,
-                  },
                 },
               };
 
