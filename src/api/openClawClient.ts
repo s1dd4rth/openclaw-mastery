@@ -142,7 +142,7 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
                 id: 'cli',
                 version: '1.0.0',
                 platform: 'macos',
-                mode: 'operator',
+                mode: 'interactive',
               },
               role: 'operator',
               scopes: ['operator.read', 'operator.write'],
