@@ -52,6 +52,77 @@ export interface OpenClawClient {
   onEvent(handler: (event: ProtocolEvent) => void): void;
 }
 
+// ── Device keypair management ───────────────────────────────────────────────
+// Generate and persist an ECDSA P-256 keypair in localStorage.
+// device.id = SHA-256 hex of the raw public key bytes.
+
+const DEVICE_KEY = 'openclawDeviceKeys';
+
+interface StoredDevice {
+  id: string;
+  publicKeyB64: string;
+  privateKeyJwk: JsonWebKey;
+}
+
+async function getOrCreateDevice(): Promise<StoredDevice> {
+  // Check localStorage for existing keypair
+  try {
+    const raw = localStorage.getItem(DEVICE_KEY);
+    if (raw) return JSON.parse(raw) as StoredDevice;
+  } catch { /* regenerate */ }
+
+  // Generate new ECDSA P-256 keypair
+  const keyPair = await crypto.subtle.generateKey(
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    true, // extractable
+    ['sign', 'verify'],
+  );
+
+  // Export public key as raw bytes for fingerprinting
+  const pubRaw = await crypto.subtle.exportKey('raw', keyPair.publicKey);
+  const pubB64 = btoa(String.fromCharCode(...new Uint8Array(pubRaw)));
+
+  // device.id = SHA-256 hex of raw public key
+  const hashBuf = await crypto.subtle.digest('SHA-256', pubRaw);
+  const deviceId = Array.from(new Uint8Array(hashBuf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  // Export private key as JWK for storage
+  const privJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
+
+  const stored: StoredDevice = { id: deviceId, publicKeyB64: pubB64, privateKeyJwk: privJwk };
+
+  try {
+    localStorage.setItem(DEVICE_KEY, JSON.stringify(stored));
+  } catch { /* quota exceeded */ }
+
+  return stored;
+}
+
+async function signNonce(device: StoredDevice, nonce: string): Promise<string> {
+  // Re-import private key for signing
+  const privateKey = await crypto.subtle.importKey(
+    'jwk',
+    device.privateKeyJwk,
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['sign'],
+  );
+
+  // Sign the nonce bytes
+  const data = new TextEncoder().encode(nonce);
+  const signature = await crypto.subtle.sign(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    privateKey,
+    data,
+  );
+
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}
+
+// ── Client factory ──────────────────────────────────────────────────────────
+
 export function createOpenClawClient(connection: ConnectionState): OpenClawClient {
   const { instanceUrl, sessionToken } = connection;
 
@@ -160,14 +231,10 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
             // Step 1: Respond to the challenge with a connect request
             if (msg.type === 'event' && msg.event === 'connect.challenge') {
               const payload = msg.payload as { nonce: string; ts: number };
-              console.log('[OpenClaw] Got challenge, sending connect with nonce...');
+              console.log('[OpenClaw] Got challenge, generating device identity...');
 
-              // Generate a stable device ID from the token (deterministic per connection)
-              crypto.subtle.digest(
-                'SHA-256',
-                new TextEncoder().encode('openclaw-mastery-' + sessionToken),
-              ).then(buf => {
-                const deviceId = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+              getOrCreateDevice().then(async (device) => {
+                const signature = await signNonce(device, payload.nonce);
 
                 const connectReq: ProtocolRequest = {
                   type: 'req',
@@ -186,16 +253,17 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
                     scopes: ['operator.admin', 'operator.read', 'operator.write', 'operator.approvals', 'operator.pairing'],
                     auth: { token: sessionToken },
                     device: {
-                      id: deviceId,
-                      publicKey: btoa('openclaw-mastery-companion'),
-                      signature: btoa(payload.nonce + ':' + Date.now()),
+                      id: device.id,
+                      publicKey: device.publicKeyB64,
+                      signature,
                       signedAt: Date.now(),
                       nonce: payload.nonce,
                     },
                   },
                 };
 
-                console.log('[OpenClaw] Connect params:', JSON.stringify(connectReq.params, null, 2));
+                console.log('[OpenClaw] Device ID:', device.id);
+                console.log('[OpenClaw] Sending connect with real ECDSA device identity...');
                 ws!.send(JSON.stringify(connectReq));
               });
               return;
