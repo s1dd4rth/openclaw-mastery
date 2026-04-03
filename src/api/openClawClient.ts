@@ -230,42 +230,31 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
 
             // Step 1: Respond to the challenge with a connect request
             if (msg.type === 'event' && msg.event === 'connect.challenge') {
-              const payload = msg.payload as { nonce: string; ts: number };
-              console.log('[OpenClaw] Got challenge, generating device identity...');
+              console.log('[OpenClaw] Got challenge, connecting without device auth...');
 
-              getOrCreateDevice().then(async (device) => {
-                const signature = await signNonce(device, payload.nonce);
-
-                const connectReq: ProtocolRequest = {
-                  type: 'req',
-                  id: nextReqId(),
-                  method: 'connect',
-                  params: {
-                    minProtocol: 3,
-                    maxProtocol: 3,
-                    client: {
-                      id: 'cli',
-                      version: '2026.3.28',
-                      platform: 'macos',
-                      mode: 'cli',
-                    },
-                    role: 'operator',
-                    scopes: ['operator.admin', 'operator.read', 'operator.write', 'operator.approvals', 'operator.pairing'],
-                    auth: { token: sessionToken },
-                    device: {
-                      id: device.id,
-                      publicKey: device.publicKeyB64,
-                      signature,
-                      signedAt: Date.now(),
-                      nonce: payload.nonce,
-                    },
+              // Connect with read-only first (no device fields)
+              // Then use web.login.start/wait to upgrade to write scopes
+              const connectReq: ProtocolRequest = {
+                type: 'req',
+                id: nextReqId(),
+                method: 'connect',
+                params: {
+                  minProtocol: 3,
+                  maxProtocol: 3,
+                  client: {
+                    id: 'cli',
+                    version: '2026.3.28',
+                    platform: 'macos',
+                    mode: 'cli',
                   },
-                };
+                  role: 'operator',
+                  scopes: ['operator.admin', 'operator.read', 'operator.write', 'operator.approvals', 'operator.pairing'],
+                  auth: { token: sessionToken },
+                },
+              };
 
-                console.log('[OpenClaw] Device ID:', device.id);
-                console.log('[OpenClaw] Sending connect with real ECDSA device identity...');
-                ws!.send(JSON.stringify(connectReq));
-              });
+              console.log('[OpenClaw] Sending connect (no device, will try web.login after)...');
+              ws!.send(JSON.stringify(connectReq));
               return;
             }
 
@@ -348,46 +337,59 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
       return connected && ws?.readyState === WebSocket.OPEN;
     },
 
+    async tryWebLogin(): Promise<boolean> {
+      try {
+        console.log('[OpenClaw] Attempting web.login.start...');
+        const startRes = await sendRequest('web.login.start', {});
+        console.log('[OpenClaw] web.login.start response:', JSON.stringify(startRes, null, 2));
+
+        if (!startRes.ok) {
+          console.log('[OpenClaw] web.login.start failed:', (startRes.error as any)?.message);
+          return false;
+        }
+
+        console.log('[OpenClaw] Waiting for web.login approval...');
+        const waitRes = await sendRequest('web.login.wait', {});
+        console.log('[OpenClaw] web.login.wait response:', JSON.stringify(waitRes, null, 2));
+        return waitRes.ok;
+      } catch (e) {
+        console.error('[OpenClaw] web.login error:', e);
+        return false;
+      }
+    },
+
     async sendMessage(message: string): Promise<string> {
       console.log('[OpenClaw] Sending message:', message.slice(0, 100));
 
-      // Try multiple methods to find one that works with our scope level
-      const methods = [
-        { name: 'chat.send', params: { message, sessionKey: mainSessionKey } },
-        { name: 'sessions.send', params: { sessionKey: mainSessionKey, message: { role: 'user', content: message } } },
-        { name: 'send', params: { message, sessionKey: mainSessionKey } },
-        { name: 'agent', params: { message, agentId: 'main', sessionKey: mainSessionKey } },
-      ];
+      // Try chat.send first
+      console.log('[OpenClaw] Trying chat.send...');
+      const res = await sendRequest('chat.send', { message, sessionKey: mainSessionKey });
 
-      for (const method of methods) {
-        try {
-          console.log(`[OpenClaw] Trying ${method.name}...`);
-          const res = await sendRequest(method.name, method.params);
+      if (res.ok) {
+        console.log('[OpenClaw] chat.send succeeded');
+        const payload = res.payload ?? {};
+        return (payload.response ?? payload.message ?? payload.text ?? payload.content ?? JSON.stringify(payload)) as string;
+      }
 
-          if (res.ok) {
-            console.log(`[OpenClaw] ${method.name} succeeded:`, Object.keys(res.payload ?? {}));
-            const payload = res.payload ?? {};
+      const errMsg = (res.error as any)?.message ?? 'failed';
+      console.log('[OpenClaw] chat.send failed:', errMsg);
+
+      // If scope error, try web login to upgrade
+      if (errMsg.includes('scope')) {
+        console.log('[OpenClaw] Scope error — attempting web.login to upgrade...');
+        const loginOk = await this.tryWebLogin();
+        if (loginOk) {
+          // Retry after login
+          console.log('[OpenClaw] Web login succeeded, retrying chat.send...');
+          const retry = await sendRequest('chat.send', { message, sessionKey: mainSessionKey });
+          if (retry.ok) {
+            const payload = retry.payload ?? {};
             return (payload.response ?? payload.message ?? payload.text ?? payload.content ?? JSON.stringify(payload)) as string;
           }
-
-          const errMsg = (res.error as any)?.message ?? 'failed';
-          console.log(`[OpenClaw] ${method.name} rejected: ${errMsg}`);
-          // If it's a scope error, try the next method
-          if (errMsg.includes('scope')) continue;
-          // For other errors, throw
-          throw new Error(errMsg);
-        } catch (e) {
-          if (e instanceof Error && e.message.includes('scope')) {
-            console.log(`[OpenClaw] ${method.name} scope error, trying next...`);
-            continue;
-          }
-          // For non-scope errors on last method, throw
-          if (method === methods[methods.length - 1]) throw e;
-          console.log(`[OpenClaw] ${method.name} error:`, e);
         }
       }
 
-      throw new Error('All send methods failed — check gateway scopes');
+      throw new Error(errMsg);
     },
 
     async sendVerify(prompt: string): Promise<VerifyResponse | null> {
