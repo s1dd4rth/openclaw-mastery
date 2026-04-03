@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import type { Module as BaseModule, Phase } from './types';
 
-export const INSTRUCTION_BASE = '/openclaw-mastery/instructions/';
+export const INSTRUCTION_BASE = 'https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/';
 
 // ── Legacy compatibility shim ─────────────────────────────────────────────────
 // Some components still reference .sections / .checklistItems /
@@ -160,8 +160,8 @@ const m1: Module = {
                         'By default, some gateway configurations listen on 0.0.0.0, which exposes your AI gateway to the public internet on that port. Binding to 127.0.0.1 means only processes running on the same machine can reach it directly — the reverse proxy (nginx or Hostinger\'s built-in) is the only public-facing entry point. This is a critical hardening step.',
                     do: {
                         prompt:
-                            'Tell the Claw: "Bind the gateway to 127.0.0.1 and enable token authentication. Confirm when done."',
-                        instructionUrl: `${INSTRUCTION_BASE}m1-bind-gateway.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-01-install-secure/claw-instructions-security.md and follow every step. Report the result of each check and fix anything that fails.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-01-install-secure/claw-instructions-security.md`,
                     },
                     verify: {
                         checks: [
@@ -185,8 +185,8 @@ const m1: Module = {
                         'OpenClaw\'s policy settings control what the agent is allowed to do without explicit permission: send DMs, join groups, store credentials in channels, run web searches. Tightening these policies to deny-by-default means the agent must ask before acting on sensitive operations — giving you control over its blast radius. This is especially important before connecting any external channels.',
                     do: {
                         prompt:
-                            'Tell the Claw: "Set DM and group policies to restrictive, disable web search, set credentials.permissions to 700, and set heartbeat to 0m. Confirm each change."',
-                        instructionUrl: `${INSTRUCTION_BASE}m1-policies.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-01-install-secure/claw-instructions-security.md and follow every step. Report the result of each check and fix anything that fails.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-01-install-secure/claw-instructions-security.md`,
                     },
                     verify: {
                         checks: [
@@ -305,8 +305,8 @@ const m2: Module = {
                         'SOUL.md is the highest-priority file your Claw reads at the start of every session. It defines core directives, hard limits, and the personality traits that shape every response. Without it, the Claw has no stable identity and will behave inconsistently across conversations.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create SOUL.md with my core directives, hard limits, and communication style. Ask me for input on each section before writing."',
-                        instructionUrl: `${INSTRUCTION_BASE}day02-create-soul.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-02-give-it-a-soul/claw-instructions-create-soul.md and follow every step. Ask the questions in order, create `SOUL.md`, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-02-give-it-a-soul/claw-instructions-create-soul.md`,
                     },
                     verify: {
                         checks: [
@@ -337,8 +337,8 @@ const m2: Module = {
                         'USER.md tells the Claw who it is working with — your name, role, focus areas, and communication preferences. This context is loaded alongside SOUL.md and lets the Claw personalize responses without you repeating yourself every session. Keeping it concise (under 500 words) ensures it stays in high-attention range.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create USER.md with my name, current focus, and how I prefer to communicate. Ask me for each detail."',
-                        instructionUrl: `${INSTRUCTION_BASE}day02-create-user.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-02-give-it-a-soul/claw-instructions-create-user.md and follow every step. Ask the questions in order, create `USER.md`, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-02-give-it-a-soul/claw-instructions-create-user.md`,
                     },
                     verify: {
                         checks: [
@@ -369,8 +369,8 @@ const m2: Module = {
                         'MEMORY.md is where your Claw stores facts it learns about you across sessions — decisions made, preferences discovered, open loops to follow up on. Initializing it with the right structure means the Claw knows how to update it consistently rather than appending random notes. Think of it as your Claw\'s long-term memory ledger.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create MEMORY.md with sections for Decisions, Preferences, and Open Loops. Add one example entry to each section."',
-                        instructionUrl: `${INSTRUCTION_BASE}day02-create-memory.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-02-give-it-a-soul/claw-instructions-create-memory.md and follow every step. Ask the questions in order, create `MEMORY.md`, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-02-give-it-a-soul/claw-instructions-create-memory.md`,
                     },
                     verify: {
                         checks: [
@@ -394,8 +394,8 @@ const m2: Module = {
                         'AGENTS.md defines how the Claw behaves as an autonomous agent: what it checks at startup, which tools it can use without asking, and what always requires your approval. A well-structured AGENTS.md is the difference between a Claw that acts confidently within safe boundaries and one that either asks permission for everything or acts without thinking.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create AGENTS.md with a startup checklist, default allowed actions, and actions that always need my approval."',
-                        instructionUrl: `${INSTRUCTION_BASE}day02-create-agents.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-02-give-it-a-soul/claw-instructions-create-agents.md and follow every step. Create `AGENTS.md`, confirm the names are consistent, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-02-give-it-a-soul/claw-instructions-create-agents.md`,
                     },
                     verify: {
                         checks: [
@@ -426,8 +426,8 @@ const m2: Module = {
                         'After creating all four files, you need to start a fresh session and confirm your Claw loads and respects them correctly. A new session is the true test — any configuration that only works in the same conversation window where you created it will not survive a restart. This step closes the loop and confirms the identity is durable.',
                     do: {
                         prompt:
-                            'Type /new to start a fresh OpenClaw session. Ask your Claw: "Tell me your name, my name, and one of your hard limits." Confirm it answers correctly from its files.',
-                        instructionUrl: `${INSTRUCTION_BASE}day02-finalize-identity.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-02-give-it-a-soul/claw-instructions-finalize-identity.md and follow every step. Set permissions, restart the gateway, run the verification, and report PASS or FAIL for each item.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-02-give-it-a-soul/claw-instructions-finalize-identity.md`,
                     },
                     verify: {
                         checks: [
@@ -501,8 +501,8 @@ const m3: Module = {
                         'Connecting Telegram gives you a persistent, mobile-accessible interface to your Claw — without opening a browser or staying at your desk. The pairing process uses a short-lived code that binds your Telegram account to your specific OpenClaw instance. Once paired, messages you send in Telegram go directly to your Claw and replies come back in seconds.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Walk me through connecting Telegram as a channel. Generate a pairing code and guide me step by step." Have your phone ready with the Telegram app open.',
-                        instructionUrl: `${INSTRUCTION_BASE}day03-connect-telegram.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-03-connect-a-channel/claw-instructions-connect-telegram.md and follow every step. Ask me only for what you need, configure Telegram, verify it works, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-03-connect-a-channel/claw-instructions-connect-telegram.md`,
                     },
                     verify: {
                         checks: [
@@ -583,8 +583,8 @@ const m4: Module = {
                         'A cron job lets your Claw run a task on a fixed schedule without you initiating it. The daily reflection is a practical first use: each morning it sends you a message reviewing yesterday\'s open loops and asking what you want to focus on today. This turns your Claw from a reactive tool into a proactive collaborator that shows up whether you remember to open it or not.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create a daily reflection cron job that runs at my preferred morning time, delivers via Telegram, asks what I want to focus on today, and saves my reply to a daily journal file."',
-                        instructionUrl: `${INSTRUCTION_BASE}day04-daily-reflection-cron.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-04-make-it-proactive/claw-instructions-create-daily-reflection-cron.md and follow every step. Ask me only for the decisions you still need, create the cron job, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-04-make-it-proactive/claw-instructions-create-daily-reflection-cron.md`,
                     },
                     verify: {
                         checks: [
@@ -689,8 +689,8 @@ const m5: Module = {
                         'Skills in OpenClaw are pre-built capabilities you can install into your workspace — similar to apps on a phone. Before installing any skill, reading its SKILL.md tells you exactly what it does, what permissions it needs, and what it will store. Inspecting before installing is a safety habit that prevents surprises and scope creep.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Show me the SKILL.md for document-summary from ClawHub, then install it for this workspace if I approve."',
-                        instructionUrl: `${INSTRUCTION_BASE}day05-install-document-summary.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-05-give-it-skills/claw-instructions-install-document-summary.md and follow every step. Install `document-summary` into this workspace, tell me how to trigger it, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-05-give-it-skills/claw-instructions-install-document-summary.md`,
                     },
                     verify: {
                         checks: [
@@ -731,8 +731,8 @@ const m5: Module = {
                         'Custom skills let you package a behavior you want your Claw to perform reliably into a reusable, nameable capability. By writing a SKILL.md that describes the trigger, the actions, and the outputs, you give the Claw a clear contract to follow rather than inferring your intent each time. This is how you go from repeating yourself to building a system.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create a custom workspace skill called quick-note. It should classify incoming notes, add them to a running list, and flag open loops when asked."',
-                        instructionUrl: `${INSTRUCTION_BASE}day05-create-quick-note-skill.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-05-give-it-skills/claw-instructions-create-quick-note-skill.md and follow every step. Create `quick-note` in this workspace, tell me how to trigger it, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-05-give-it-skills/claw-instructions-create-quick-note-skill.md`,
                     },
                     verify: {
                         checks: [
@@ -763,8 +763,8 @@ const m5: Module = {
                         'Skills only activate reliably when loaded at the start of a new session. Testing in the same session where you installed them can give false confidence. Starting fresh with /new and running both skills confirms they are properly registered, readable by the Claw, and working as designed — not just available in your current context window.',
                     do: {
                         prompt:
-                            'Type /new to start a fresh session. Test document-summary on a short document and quick-note by adding a note. Confirm both work.',
-                        instructionUrl: `${INSTRUCTION_BASE}day05-finalize-skills.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-05-give-it-skills/claw-instructions-finalize-skills.md and follow every step. Verify both skills, tell me the exact test message for each one, and report PASS or FAIL.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-05-give-it-skills/claw-instructions-finalize-skills.md`,
                     },
                     verify: {
                         checks: [
@@ -854,8 +854,8 @@ const m6: Module = {
                         'Connecting your Claw to email is one of the highest-value integrations in this course — and also the most security-sensitive. The imap-smtp-email skill uses Gmail App Passwords rather than your main account password, creating an isolated credential that can be revoked without affecting your account. Read its SKILL.md carefully before installing so you understand exactly what access you are granting.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Show me the SKILL.md for imap-smtp-email, then walk me through creating a Gmail App Password and storing it in the config. We are doing IMAP only today — leave SMTP for Module 8."',
-                        instructionUrl: `${INSTRUCTION_BASE}day06-install-imap-smtp.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-06-tame-your-inbox/claw-instructions-install-imap-smtp-email.md and follow every step. Install `imap-smtp-email` for this workspace, configure Gmail inbox reading for Day 6, tell me where the config lives, and stop when the install report is complete.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-06-tame-your-inbox/claw-instructions-install-imap-smtp-email.md`,
                     },
                     verify: {
                         checks: [
@@ -906,8 +906,8 @@ const m6: Module = {
                         'Reading your inbox is only useful if the Claw can categorize and summarize it rather than dumping raw email at you. The email-triage skill gives the Claw a structured playbook: which categories to use, how to handle prompt injection attempts in email bodies, and what format to deliver summaries in. Defining this explicitly prevents the Claw from improvising a different approach every day.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create an email-triage workspace skill that reads my inbox, categorizes emails, flags prompt-injection attempts, and returns a structured summary."',
-                        instructionUrl: `${INSTRUCTION_BASE}day06-create-email-triage.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-06-tame-your-inbox/claw-instructions-create-email-triage.md and follow every step. Create `email-triage`, add the Day 6 email safety rules, create the morning Gmail cron job, tell me how to trigger it, and stop when the report is complete.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-06-tame-your-inbox/claw-instructions-create-email-triage.md`,
                     },
                     verify: {
                         checks: [
@@ -948,8 +948,8 @@ const m6: Module = {
                         'A morning email summary delivered via Telegram means you start each day with a clear picture of what needs attention before you open a single email client. Combined with the triage skill\'s prompt-injection protection, this gives you the efficiency benefits of AI-assisted inbox management without the security risks of giving an AI unrestricted email access.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create a cron job that runs the email-triage skill each morning and delivers a structured summary to my Telegram."',
-                        instructionUrl: `${INSTRUCTION_BASE}day06-finalize-inbox.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-06-tame-your-inbox/claw-instructions-finalize-inbox.md and follow every step. Verify the Day 6 Gmail inbox setup and report PASS or FAIL.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-06-tame-your-inbox/claw-instructions-finalize-inbox.md`,
                     },
                     verify: {
                         checks: [
@@ -1049,8 +1049,8 @@ const m7: Module = {
                         'Enabling web search upgrades your Claw from knowing what was true at training time to knowing what is true right now. Brave Search provides a privacy-respecting API that does not track queries back to you. By configuring it as the provider, you get live results without routing your searches through a surveillance business model.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Walk me through creating a Brave Search API key and configuring it as the web_search provider in OpenClaw."',
-                        instructionUrl: `${INSTRUCTION_BASE}day07-configure-web-search.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-07-make-it-research/claw-instructions-configure-web-search.md and follow every step. Configure the built-in `web_search` tool to use Brave Search for this agent. I already have the Brave API key and will paste it when you ask. Stop when the setup is complete and tell me the exact validation prompt to run next.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-07-make-it-research/claw-instructions-configure-web-search.md`,
                     },
                     verify: {
                         checks: [
@@ -1091,8 +1091,8 @@ const m7: Module = {
                         'A research-brief skill wraps raw web search in a structured workflow: search, filter by recency, summarize the findings, cite sources, and flag anything that looks like a prompt injection attempt from a search result. Without this structure, the Claw might summarize whatever it finds without checking dates or source credibility. The skill makes research repeatable and safe.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create a research-brief workspace skill that uses web_search to answer time-bound questions, cites sources, and treats web content as untrusted data."',
-                        instructionUrl: `${INSTRUCTION_BASE}day07-create-research-brief.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-07-make-it-research/claw-instructions-create-research-brief.md and follow every step. Create a `research-brief` skill for this workspace that uses `web_search` only, tell me how to trigger it, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-07-make-it-research/claw-instructions-create-research-brief.md`,
                     },
                     verify: {
                         checks: [
@@ -1194,8 +1194,8 @@ const m8: Module = {
                         'Adding SMTP credentials to your email config is the step that transforms your Claw from a reader to a sender. This is a significant capability expansion — once SMTP is configured, the Claw can initiate real communications on your behalf. That is why Module 8 pairs this with an approval gate: you should always see and confirm the full draft before anything leaves your server.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Inspect the imap-smtp-email skill\'s send workflow, then add my Gmail SMTP settings to ~/.config/imap-smtp-email/.env. Do not send anything yet."',
-                        instructionUrl: `${INSTRUCTION_BASE}day08-configure-outbound-email.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-08-let-it-write/claw-instructions-configure-outbound-email.md and follow every step. Reuse my Day 6 Gmail setup, add the SMTP side for Day 8, add the outbound email rules, tell me exactly what changed, and stop when the setup report is complete.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-08-let-it-write/claw-instructions-configure-outbound-email.md`,
                     },
                     verify: {
                         checks: [
@@ -1256,8 +1256,8 @@ const m8: Module = {
                         'The follow-up-email skill gives your Claw a structured way to compose context-aware follow-ups: it reads relevant emails, drafts a response in your voice, shows you the full draft for approval, and only sends after you confirm. This workflow replaces the mental overhead of remembering to follow up while keeping you in control of every word that leaves your account.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create a follow-up-email workspace skill that drafts a follow-up from context, shows me the full email, and waits for my approval before sending."',
-                        instructionUrl: `${INSTRUCTION_BASE}day08-create-follow-up-email.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-08-let-it-write/claw-instructions-create-follow-up-email.md and follow every step. Create `follow-up-email` for this workspace, tell me how to trigger it, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-08-let-it-write/claw-instructions-create-follow-up-email.md`,
                     },
                     verify: {
                         checks: [
@@ -1288,8 +1288,8 @@ const m8: Module = {
                         'Testing the approval gate is as important as testing the send itself. A gate that does not actually block the send when you cancel is no gate at all. This step verifies both the happy path (send after approval) and the cancellation path (no email sent when you decline), ensuring the safety mechanism works under real conditions.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Send a test email to myself. Show me the full draft and wait for my approval." After approving, verify it arrived. Then test cancellation — confirm no email is sent when you cancel.',
-                        instructionUrl: `${INSTRUCTION_BASE}day08-finalize-outbound-email.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-08-let-it-write/claw-instructions-finalize-outbound-email.md and follow every step. Verify the Day 8 outbound email setup, give me the exact test messages to use, and report PASS or FAIL.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-08-let-it-write/claw-instructions-finalize-outbound-email.md`,
                     },
                     verify: {
                         checks: [
@@ -1386,8 +1386,8 @@ const m9: Module = {
                         'A sub-agent is a separate OpenClaw workspace with its own model, identity files, and specialization — running on the same gateway as your main Claw. Creating a dedicated writer agent means long-form content gets handled by a brain tuned specifically for voice, structure, and nuance, while your main Claw stays focused on coordination and management tasks. The separation also contains costs: the writer only runs when you actually need long-form output.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Create a new named agent called writer. Give it a detailed SOUL.md tuned for long-form writing, plus USER.md, AGENTS.md, and MEMORY.md. Use a capable model from my provider family."',
-                        instructionUrl: `${INSTRUCTION_BASE}day09-create-writer-agent.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-09-give-it-a-team/claw-instructions-create-writer-agent.md and follow every step. Ask the setup questions in order, create the `writer` agent, keep the writer identity files detailed, choose its model from my existing provider setup, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-09-give-it-a-team/claw-instructions-create-writer-agent.md`,
                     },
                     verify: {
                         checks: [
@@ -1438,8 +1438,8 @@ const m9: Module = {
                         'Agent-to-agent communication lets your main Claw delegate tasks to the writer and receive the output back — creating a pipeline where coordination and creation are handled by the most suitable brain for each job. Adding a short delegation rule to your main AGENTS.md means the Claw knows when to hand off automatically rather than attempting everything itself.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Enable agent-to-agent communication between main and writer. Add a delegation rule to main AGENTS.md: delegate long-form writing tasks to the writer agent."',
-                        instructionUrl: `${INSTRUCTION_BASE}day09-enable-teamwork.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-09-give-it-a-team/claw-instructions-enable-teamwork.md and follow every step. Enable delegation between `main` and `writer`, add a short rule so long-form writing goes to the writer, and stop when you\'re done.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-09-give-it-a-team/claw-instructions-enable-teamwork.md`,
                     },
                     verify: {
                         checks: [
@@ -1547,8 +1547,8 @@ const m10: Module = {
                         'The course assessment asks your Claw to review everything you built across all ten modules and produce a day-by-day completion report. This is a self-audit: it reads your actual files, checks your actual configuration, and tells you honestly what is complete and what might need revisiting. The optional completion code summarizes the result in a compact format you can share.',
                     do: {
                         prompt:
-                            'Tell your Claw: "Review my setup across all ten modules and produce a day-by-day pass/fail report. At the end, generate an optional completion code that summarizes the result."',
-                        instructionUrl: `${INSTRUCTION_BASE}day10-course-verification.md`,
+                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-10-what-comes-next/claw-instructions-run-course-verification.md and follow every step. Review my setup across the course, tell me which days look complete, generate the optional completion code, and stop when the report is complete.',
+                        instructionUrl: `${INSTRUCTION_BASE}day-10-what-comes-next/claw-instructions-run-course-verification.md`,
                     },
                     verify: {
                         checks: [
