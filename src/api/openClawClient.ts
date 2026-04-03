@@ -191,12 +191,16 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
               const res = msg as unknown as ProtocolResponse;
               if (res.ok) {
                 console.log('[OpenClaw] Connected!');
-                // Extract session key from snapshot
-                const snapshot = (res.payload as any)?.snapshot;
+                // Extract session info from snapshot
+                const payload = res.payload as any;
+                const snapshot = payload?.snapshot;
                 if (snapshot?.sessionDefaults?.mainSessionKey) {
                   mainSessionKey = snapshot.sessionDefaults.mainSessionKey;
-                  console.log('[OpenClaw] Session key:', mainSessionKey);
                 }
+                // Log what scopes/auth we actually received
+                console.log('[OpenClaw] Session key:', mainSessionKey);
+                console.log('[OpenClaw] Auth info:', JSON.stringify(payload?.auth, null, 2));
+                console.log('[OpenClaw] Auth mode:', snapshot?.authMode);
                 if (!settled) {
                   settled = true;
                   connected = true;
@@ -262,23 +266,33 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
     },
 
     async sendMessage(message: string): Promise<string> {
-      console.log('[OpenClaw] Sending chat.send:', { message: message.slice(0, 100), sessionKey: mainSessionKey });
+      console.log('[OpenClaw] Sending message:', { message: message.slice(0, 100), sessionKey: mainSessionKey });
 
-      // Try chat.send with session key
-      const res = await sendRequest('chat.send', {
-        message,
-        sessionKey: mainSessionKey,
-      });
+      // Try sessions.send first (may have different scope requirements)
+      let res: ProtocolResponse;
+      try {
+        res = await sendRequest('sessions.send', {
+          sessionKey: mainSessionKey,
+          message: { role: 'user', content: message },
+        });
+      } catch (e) {
+        console.log('[OpenClaw] sessions.send failed, trying chat.send...', e);
+        // Fallback to chat.send
+        res = await sendRequest('chat.send', {
+          message,
+          sessionKey: mainSessionKey,
+        });
+      }
 
       if (!res.ok) {
-        const errMsg = (res.error as any)?.message ?? (res.error as any)?.details?.reason ?? 'chat.send failed';
-        console.error('[OpenClaw] chat.send error:', JSON.stringify(res.error, null, 2));
+        const errMsg = (res.error as any)?.message ?? (res.error as any)?.details?.reason ?? 'send failed';
+        console.error('[OpenClaw] send error:', JSON.stringify(res.error, null, 2));
         throw new Error(errMsg);
       }
 
-      console.log('[OpenClaw] chat.send response:', JSON.stringify(res.payload, null, 2));
+      console.log('[OpenClaw] send response keys:', Object.keys(res.payload ?? {}));
       const payload = res.payload ?? {};
-      return (payload.response ?? payload.message ?? payload.text ?? JSON.stringify(payload)) as string;
+      return (payload.response ?? payload.message ?? payload.text ?? payload.content ?? JSON.stringify(payload)) as string;
     },
 
     async sendVerify(prompt: string): Promise<VerifyResponse | null> {
