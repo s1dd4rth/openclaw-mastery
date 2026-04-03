@@ -36,6 +36,13 @@ export interface VerifyResponse {
   checks: VerifyCheckResult[];
 }
 
+export interface HistoryMessage {
+  role: string;
+  content: string;
+  timestamp?: number | string;
+  [key: string]: unknown;
+}
+
 // ── WebSocket client ────────────────────────────────────────────────────────
 
 let requestCounter = 0;
@@ -47,78 +54,11 @@ export interface OpenClawClient {
   connect(): Promise<void>;
   disconnect(): void;
   isOpen(): boolean;
-  sendMessage(message: string): Promise<string>;
-  sendVerify(prompt: string): Promise<VerifyResponse | null>;
+  sendRequest(method: string, params: Record<string, unknown>): Promise<ProtocolResponse>;
+  getHistory(): Promise<HistoryMessage[]>;
+  sendVerify(): Promise<VerifyResponse | null>;
+  getControlUiUrl(): string;
   onEvent(handler: (event: ProtocolEvent) => void): void;
-}
-
-// ── Device keypair management ───────────────────────────────────────────────
-// Generate and persist an ECDSA P-256 keypair in localStorage.
-// device.id = SHA-256 hex of the raw public key bytes.
-
-const DEVICE_KEY = 'openclawDeviceKeys';
-
-interface StoredDevice {
-  id: string;
-  publicKeyB64: string;
-  privateKeyJwk: JsonWebKey;
-}
-
-async function getOrCreateDevice(): Promise<StoredDevice> {
-  // Check localStorage for existing keypair
-  try {
-    const raw = localStorage.getItem(DEVICE_KEY);
-    if (raw) return JSON.parse(raw) as StoredDevice;
-  } catch { /* regenerate */ }
-
-  // Generate new ECDSA P-256 keypair
-  const keyPair = await crypto.subtle.generateKey(
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    true, // extractable
-    ['sign', 'verify'],
-  );
-
-  // Export public key as raw bytes for fingerprinting
-  const pubRaw = await crypto.subtle.exportKey('raw', keyPair.publicKey);
-  const pubB64 = btoa(String.fromCharCode(...new Uint8Array(pubRaw)));
-
-  // device.id = SHA-256 hex of raw public key
-  const hashBuf = await crypto.subtle.digest('SHA-256', pubRaw);
-  const deviceId = Array.from(new Uint8Array(hashBuf))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-
-  // Export private key as JWK for storage
-  const privJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
-
-  const stored: StoredDevice = { id: deviceId, publicKeyB64: pubB64, privateKeyJwk: privJwk };
-
-  try {
-    localStorage.setItem(DEVICE_KEY, JSON.stringify(stored));
-  } catch { /* quota exceeded */ }
-
-  return stored;
-}
-
-async function signNonce(device: StoredDevice, nonce: string): Promise<string> {
-  // Re-import private key for signing
-  const privateKey = await crypto.subtle.importKey(
-    'jwk',
-    device.privateKeyJwk,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    false,
-    ['sign'],
-  );
-
-  // Sign the nonce bytes
-  const data = new TextEncoder().encode(nonce);
-  const signature = await crypto.subtle.sign(
-    { name: 'ECDSA', hash: 'SHA-256' },
-    privateKey,
-    data,
-  );
-
-  return btoa(String.fromCharCode(...new Uint8Array(signature)));
 }
 
 // ── Client factory ──────────────────────────────────────────────────────────
@@ -160,6 +100,16 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
 
     // Append /ws path + query params
     return `${normalized}/ws?token=${encodeURIComponent(sessionToken)}&clientInfo=${clientInfoB64}`;
+  }
+
+  // Build the Control UI URL for this gateway (token in fragment, not query string)
+  function buildControlUiUrl(): string {
+    let normalized = instanceUrl.trim().replace(/\/+$/, '');
+    // Ensure https:// prefix
+    if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+      normalized = `https://${normalized}`;
+    }
+    return `${normalized}/#token=${sessionToken}`;
   }
 
   function handleMessage(data: string) {
@@ -232,8 +182,6 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
             if (msg.type === 'event' && msg.event === 'connect.challenge') {
               console.log('[OpenClaw] Got challenge, connecting without device auth...');
 
-              // Connect with read-only first (no device fields)
-              // Then use web.login.start/wait to upgrade to write scopes
               const connectReq: ProtocolRequest = {
                 type: 'req',
                 id: nextReqId(),
@@ -256,7 +204,7 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
                 },
               };
 
-              console.log('[OpenClaw] Sending connect (no device, will try web.login after)...');
+              console.log('[OpenClaw] Sending connect request...');
               ws!.send(JSON.stringify(connectReq));
               return;
             }
@@ -340,72 +288,74 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
       return connected && ws?.readyState === WebSocket.OPEN;
     },
 
-    async tryWebLogin(): Promise<boolean> {
-      try {
-        console.log('[OpenClaw] Attempting web.login.start...');
-        const startRes = await sendRequest('web.login.start', {});
-        console.log('[OpenClaw] web.login.start response:', JSON.stringify(startRes, null, 2));
+    sendRequest,
 
-        if (!startRes.ok) {
-          console.log('[OpenClaw] web.login.start failed:', (startRes.error as any)?.message);
-          return false;
+    // Fetch recent session history via read-only chat.history
+    async getHistory(): Promise<HistoryMessage[]> {
+      try {
+        console.log('[OpenClaw] Fetching chat history, sessionKey:', mainSessionKey);
+        const res = await sendRequest('chat.history', { sessionKey: mainSessionKey, limit: 50 });
+        console.log('[OpenClaw] chat.history response:', JSON.stringify(res, null, 2));
+
+        if (!res.ok) {
+          console.warn('[OpenClaw] chat.history failed:', res.error);
+          return [];
         }
 
-        console.log('[OpenClaw] Waiting for web.login approval...');
-        const waitRes = await sendRequest('web.login.wait', {});
-        console.log('[OpenClaw] web.login.wait response:', JSON.stringify(waitRes, null, 2));
-        return waitRes.ok;
-      } catch (e) {
-        console.error('[OpenClaw] web.login error:', e);
-        return false;
+        // The payload format is unknown — handle gracefully
+        const payload = res.payload as any;
+        if (Array.isArray(payload)) {
+          return payload as HistoryMessage[];
+        }
+        if (payload?.messages && Array.isArray(payload.messages)) {
+          return payload.messages as HistoryMessage[];
+        }
+        if (payload?.history && Array.isArray(payload.history)) {
+          return payload.history as HistoryMessage[];
+        }
+        if (payload?.items && Array.isArray(payload.items)) {
+          return payload.items as HistoryMessage[];
+        }
+        console.warn('[OpenClaw] Unexpected chat.history payload shape:', payload);
+        return [];
+      } catch (err) {
+        console.error('[OpenClaw] getHistory error:', err);
+        return [];
       }
     },
 
-    async sendMessage(message: string): Promise<string> {
-      console.log('[OpenClaw] Sending message:', message.slice(0, 100));
-
-      // Try chat.send first
-      console.log('[OpenClaw] Trying chat.send...');
-      const res = await sendRequest('chat.send', { message, sessionKey: mainSessionKey });
-
-      if (res.ok) {
-        console.log('[OpenClaw] chat.send succeeded');
-        const payload = res.payload ?? {};
-        return (payload.response ?? payload.message ?? payload.text ?? payload.content ?? JSON.stringify(payload)) as string;
-      }
-
-      const errMsg = (res.error as any)?.message ?? 'failed';
-      console.log('[OpenClaw] chat.send failed:', errMsg);
-
-      // If scope error, try web login to upgrade
-      if (errMsg.includes('scope')) {
-        console.log('[OpenClaw] Scope error — attempting web.login to upgrade...');
-        const loginOk = await this.tryWebLogin();
-        if (loginOk) {
-          // Retry after login
-          console.log('[OpenClaw] Web login succeeded, retrying chat.send...');
-          const retry = await sendRequest('chat.send', { message, sessionKey: mainSessionKey });
-          if (retry.ok) {
-            const payload = retry.payload ?? {};
-            return (payload.response ?? payload.message ?? payload.text ?? payload.content ?? JSON.stringify(payload)) as string;
+    // Read chat history and look for verification results (JSON with a "checks" array)
+    async sendVerify(): Promise<VerifyResponse | null> {
+      try {
+        const messages = await this.getHistory();
+        // Walk messages from newest to oldest looking for a checks JSON payload
+        for (let i = messages.length - 1; i >= 0; i--) {
+          const msg = messages[i];
+          const content = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content);
+          // Look for embedded JSON with a checks array
+          const jsonMatch = content.match(/\{[\s\S]*"checks"[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              const parsed = JSON.parse(jsonMatch[0]);
+              if (parsed.checks && Array.isArray(parsed.checks)) {
+                console.log('[OpenClaw] Found verify response in history:', parsed);
+                return parsed as VerifyResponse;
+              }
+            } catch {
+              // Not valid JSON — continue searching
+            }
           }
         }
+        console.log('[OpenClaw] No verify JSON found in recent history');
+        return null;
+      } catch (err) {
+        console.error('[OpenClaw] sendVerify error:', err);
+        return null;
       }
-
-      throw new Error(errMsg);
     },
 
-    async sendVerify(prompt: string): Promise<VerifyResponse | null> {
-      const response = await this.sendMessage(prompt);
-      try {
-        const parsed = JSON.parse(response);
-        if (parsed.checks && Array.isArray(parsed.checks)) {
-          return parsed as VerifyResponse;
-        }
-      } catch {
-        // Not valid JSON — caller handles fallback
-      }
-      return null;
+    getControlUiUrl(): string {
+      return buildControlUiUrl();
     },
 
     onEvent(handler: (event: ProtocolEvent) => void) {

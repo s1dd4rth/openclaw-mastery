@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { ShieldCheck, Loader2, SkipForward } from 'lucide-react';
 import type { CheckItem, VerifyResult } from '../../data/types';
 import { CheckResult } from './CheckResult';
@@ -39,6 +38,7 @@ export const StepVerify = ({
             <button
               onClick={onRunChecks}
               disabled={isSending}
+              title="Reads recent chat history to look for verification results"
               className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-medium hover:bg-slate-700 disabled:opacity-50 transition-colors"
             >
               {isSending ? (
@@ -84,6 +84,12 @@ export const StepVerify = ({
       {!isConnected && (
         <p className="text-xs text-slate-400 italic">
           Connect your Claw to auto-verify, or check these manually.
+        </p>
+      )}
+
+      {isConnected && (
+        <p className="text-xs text-slate-400 italic">
+          Clicking "Check" reads recent chat history for verification results. Run your checks in the Claw Chat first, then click Check.
         </p>
       )}
     </div>

@@ -12,6 +12,7 @@ interface StepEngineProps {
   isConnected: boolean;
   isSending: boolean;
   userInputs: Record<string, string>;
+  controlUiUrl: string;
   getVerifyResults: (stepId: string) => Record<string, VerifyResult> | undefined;
   isStepComplete: (stepId: string) => boolean;
   onExecute: (prompt: string, stepTitle: string) => void;
@@ -30,6 +31,7 @@ export const StepEngine = ({
   isConnected,
   isSending,
   userInputs,
+  controlUiUrl,
   getVerifyResults,
   isStepComplete,
   onExecute,
@@ -81,6 +83,7 @@ export const StepEngine = ({
               isConnected={isConnected}
               isSending={isSending}
               userInputs={userInputs}
+              controlUiUrl={controlUiUrl}
               onExecute={prompt => onExecute(prompt, step.title)}
               onSaveInput={onSaveInput}
             />

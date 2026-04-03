@@ -26,7 +26,7 @@ export default function App() {
   } = useStepProgress();
 
   // ── Chat ────────────────────────────────────────────────────────────
-  const { messages, isSending, sendMessage, sendVerify, clearMessages } =
+  const { messages, isLoading, isSending, fetchHistory, clearMessages } =
     useChatMessages(client);
 
   // ── UI state ────────────────────────────────────────────────────────
@@ -51,6 +51,9 @@ export default function App() {
     return total > 0 && passed === total;
   }).length;
 
+  // Control UI URL — derives from client when connected, otherwise empty
+  const controlUiUrl = client?.getControlUiUrl() ?? '';
+
   // ── Handlers ────────────────────────────────────────────────────────
   const handleModuleChange = (moduleId: string) => {
     const mod = MODULES_DATA.find(m => m.id === moduleId);
@@ -64,25 +67,41 @@ export default function App() {
     setNav({ phaseId, stepIndex: 0 });
   };
 
-  const handleExecute = async (prompt: string, stepTitle: string) => {
-    await sendMessage(prompt, { auto: true, stepTitle });
+  // Execute: copies prompt to clipboard and opens Control UI in a new tab.
+  // The actual copy + window.open happens in StepDo; this is called as a
+  // side-effect notification (no-op here but kept for future instrumentation).
+  const handleExecute = (_prompt: string, _stepTitle: string) => {
+    // Side-effects handled inside StepDo (clipboard + window.open).
+    // Optionally trigger a history refresh after a short delay so the
+    // chat panel shows the newly sent message once the user types it.
+    setTimeout(() => fetchHistory(), 8000);
   };
 
+  // Read history and scan for verification JSON in recent messages.
   const handleRunChecks = async (
     stepId: string,
     checks: Array<{ id: string; verifyPrompt: string }>,
   ) => {
+    if (!client || !client.isOpen()) return;
+
     const results: Record<string, VerifyResult> = {};
+
+    // Fetch latest history once, then look for check results
+    const verifyResult = await client.sendVerify();
+
     for (const check of checks) {
-      const checkResults = await sendVerify(check.verifyPrompt);
-      if (checkResults) {
-        for (const r of checkResults) {
-          results[r.id] = { pass: r.pass, detail: r.detail, checkedAt: new Date().toISOString() };
+      if (verifyResult) {
+        const found = verifyResult.checks.find(r => r.id === check.id);
+        if (found) {
+          results[check.id] = { pass: found.pass, detail: found.detail, checkedAt: new Date().toISOString() };
+        } else {
+          results[check.id] = { pass: false, detail: 'No result found in recent chat history for this check.', checkedAt: new Date().toISOString() };
         }
       } else {
-        results[check.id] = { pass: false, detail: 'Verification returned non-JSON response. Check the chat panel.', checkedAt: new Date().toISOString() };
+        results[check.id] = { pass: false, detail: 'No verification JSON found in recent chat history. Run the check in your Claw Chat first.', checkedAt: new Date().toISOString() };
       }
     }
+
     setVerifyResults(nav.moduleId, nav.phaseId, stepId, results);
   };
 
@@ -91,8 +110,13 @@ export default function App() {
     stepId: string,
     checks: Array<{ id: string; verifyPrompt: string }>,
   ) => {
-    await sendMessage(fixPrompt, { auto: true, stepTitle: 'Auto-fix' });
-    await handleRunChecks(stepId, checks);
+    // Copy fix prompt + open Control UI for the user to paste
+    try {
+      await navigator.clipboard.writeText(fixPrompt);
+    } catch { /* ignore */ }
+    window.open(controlUiUrl, '_blank');
+    // After a delay, re-check
+    setTimeout(() => handleRunChecks(stepId, checks), 10000);
   };
 
   const handleRecheckSingle = async (
@@ -194,8 +218,9 @@ export default function App() {
               isSending={isSending}
               onValidateAll={handleValidateAll}
               onFix={async (fixPrompt) => {
-                await sendMessage(fixPrompt, { auto: true, stepTitle: 'Auto-fix' });
-                await handleValidateAll();
+                try { await navigator.clipboard.writeText(fixPrompt); } catch { /* ignore */ }
+                window.open(controlUiUrl, '_blank');
+                setTimeout(() => handleValidateAll(), 10000);
               }}
               onRecheck={async (checkId) => {
                 // Find the check and re-run it
@@ -219,6 +244,7 @@ export default function App() {
               isConnected={isConnected}
               isSending={isSending}
               userInputs={userInputs}
+              controlUiUrl={controlUiUrl}
               getVerifyResults={stepId =>
                 getStepState(nav.moduleId, nav.phaseId, stepId)?.verifyResults
               }
@@ -241,10 +267,11 @@ export default function App() {
         <div className="app-chat">
           <ChatPanel
             messages={messages}
-            isSending={isSending}
+            isLoading={isLoading}
             isConnected={isConnected}
             clawName={connection?.clawName}
-            onSendMessage={msg => sendMessage(msg)}
+            controlUiUrl={controlUiUrl}
+            onRefresh={() => fetchHistory()}
             onOpenPairing={() => setShowPairing(true)}
           />
         </div>

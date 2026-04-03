@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Play, Loader2 } from 'lucide-react';
+import { ExternalLink, Loader2 } from 'lucide-react';
 import { CopyButton } from '../ui/CopyButton';
 
 interface StepDoProps {
@@ -13,6 +13,7 @@ interface StepDoProps {
   isConnected: boolean;
   isSending: boolean;
   userInputs: Record<string, string>;
+  controlUiUrl: string;
   onExecute: (fullPrompt: string) => void;
   onSaveInput: (key: string, value: string) => void;
 }
@@ -24,12 +25,14 @@ export const StepDo = ({
   isConnected,
   isSending,
   userInputs,
+  controlUiUrl,
   onExecute,
   onSaveInput,
 }: StepDoProps) => {
   const [inputValue, setInputValue] = useState(
     requiresInput ? (userInputs[requiresInput.storeAs] ?? '') : '',
   );
+  const [copied, setCopied] = useState(false);
 
   const buildFullPrompt = (): string => {
     let full = prompt;
@@ -42,11 +45,26 @@ export const StepDo = ({
     return full;
   };
 
-  const handleExecute = () => {
+  const handleExecute = async () => {
     if (requiresInput && inputValue) {
       onSaveInput(requiresInput.storeAs, inputValue);
     }
-    onExecute(buildFullPrompt());
+    const fullPrompt = buildFullPrompt();
+
+    // Copy prompt to clipboard
+    try {
+      await navigator.clipboard.writeText(fullPrompt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      // Clipboard write failed — still open the Control UI
+    }
+
+    // Open the Control UI in a new tab
+    window.open(controlUiUrl, '_blank');
+
+    // Also notify the parent (for any side-effects like logging)
+    onExecute(fullPrompt);
   };
 
   return (
@@ -72,25 +90,32 @@ export const StepDo = ({
         <div className="px-4 py-3 text-sm text-slate-700 font-mono leading-relaxed">
           {prompt}
         </div>
-        <div className="flex items-center justify-end gap-2 px-4 py-2.5 bg-openclaw-red/10 border-t border-openclaw-red/15">
+        <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-openclaw-red/10 border-t border-openclaw-red/15">
           {isConnected ? (
-            <button
-              onClick={handleExecute}
-              disabled={isSending || (requiresInput && !inputValue)}
-              className="flex items-center gap-2 px-4 py-2 bg-openclaw-red text-white rounded-lg text-sm font-semibold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSending ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Running...
-                </>
-              ) : (
-                <>
-                  <Play size={14} />
-                  Execute
-                </>
+            <div className="flex items-center gap-3 w-full">
+              <button
+                onClick={handleExecute}
+                disabled={isSending || (!!requiresInput && !inputValue)}
+                className="flex items-center gap-2 px-4 py-2 bg-openclaw-red text-white rounded-lg text-sm font-semibold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSending ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Opening...
+                  </>
+                ) : (
+                  <>
+                    <ExternalLink size={14} />
+                    Execute
+                  </>
+                )}
+              </button>
+              {copied && (
+                <span className="text-xs text-emerald-700 font-medium">
+                  Prompt copied! Paste it in your Claw's chat window that just opened.
+                </span>
               )}
-            </button>
+            </div>
           ) : (
             <CopyButton text={buildFullPrompt()} label="Copy Prompt" />
           )}
