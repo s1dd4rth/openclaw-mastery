@@ -39,11 +39,18 @@ export const PairingFlow = ({
         <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
           <div className="flex items-start gap-3">
             <Shield size={20} className="text-openclaw-red mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-slate-600">
-              <p className="font-medium text-slate-800 mb-1">You need two things from Module 1</p>
+            <div className="text-sm text-slate-600 space-y-2">
+              <p className="font-medium text-slate-800">You need two things from Module 1</p>
               <p>
-                Your <strong>gateway URL</strong> (the address you use to access your Claw's web chat)
-                and your <strong>gateway token</strong> (set during the security hardening step).
+                Your <strong>gateway URL</strong> (e.g., <code className="bg-slate-200 px-1 py-0.5 rounded text-xs font-mono">http://your-vps-ip:18789</code>)
+                and your <strong>gateway token</strong>.
+              </p>
+              <p className="text-xs text-slate-500">
+                First time? Tell your Claw:{' '}
+                <code className="bg-slate-200 px-1 py-0.5 rounded font-mono">
+                  Add this course app's origin to gateway.controlUi.allowedOrigins
+                </code>{' '}
+                and approve the device when prompted.
               </p>
             </div>
           </div>

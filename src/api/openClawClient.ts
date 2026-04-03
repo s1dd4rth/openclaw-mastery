@@ -63,11 +63,19 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
   }>();
   let eventHandler: ((event: ProtocolEvent) => void) | null = null;
 
-  // Build WebSocket URL from instance URL
+  // Build WebSocket URL from the gateway URL the user provided.
+  // The user may provide http(s) or ws(s) URLs. We normalize to ws(s).
   function getWsUrl(): string {
-    const url = new URL(instanceUrl);
-    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-    return url.toString().replace(/\/+$/, '');
+    let normalized = instanceUrl.trim().replace(/\/+$/, '');
+    // Convert http(s) to ws(s)
+    normalized = normalized
+      .replace(/^https:\/\//, 'wss://')
+      .replace(/^http:\/\//, 'ws://');
+    // If no protocol, assume ws
+    if (!normalized.startsWith('ws://') && !normalized.startsWith('wss://')) {
+      normalized = `ws://${normalized}`;
+    }
+    return normalized;
   }
 
   function handleMessage(data: string) {
