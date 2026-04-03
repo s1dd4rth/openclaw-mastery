@@ -143,32 +143,76 @@ export function createOpenClawClient(connection: ConnectionState): OpenClawClien
         let settled = false;
 
         ws.onopen = () => {
-          console.log('[OpenClaw] WebSocket open (auth via query params)');
+          console.log('[OpenClaw] WebSocket open, waiting for challenge...');
 
-          // With query param auth, the connection may be ready immediately.
-          // Listen for any initial server message to confirm.
           ws!.onmessage = (event) => {
             console.log('[OpenClaw] Message:', event.data);
-            handleMessage(event.data);
 
-            // If we get any message and haven't settled, we're connected
-            if (!settled) {
-              settled = true;
-              connected = true;
-              resolve();
+            let msg: Record<string, unknown>;
+            try {
+              msg = JSON.parse(event.data);
+            } catch {
+              console.warn('[OpenClaw] Non-JSON message:', event.data);
+              return;
             }
+
+            // Step 1: Respond to the challenge with a connect request
+            if (msg.type === 'event' && msg.event === 'connect.challenge') {
+              const payload = msg.payload as { nonce: string; ts: number };
+              console.log('[OpenClaw] Got challenge, sending connect with nonce...');
+
+              const connectReq: ProtocolRequest = {
+                type: 'req',
+                id: nextReqId(),
+                method: 'connect',
+                params: {
+                  minProtocol: 3,
+                  maxProtocol: 3,
+                  client: {
+                    id: 'custom-app',
+                    mode: 'control',
+                    platform: 'web',
+                  },
+                  role: 'operator',
+                  scopes: ['operator.read', 'operator.write'],
+                  auth: { token: sessionToken },
+                  device: {
+                    nonce: payload.nonce,
+                  },
+                },
+              };
+
+              console.log('[OpenClaw] Connect params:', JSON.stringify(connectReq.params, null, 2));
+              ws!.send(JSON.stringify(connectReq));
+              return;
+            }
+
+            // Step 2: Handle the connect response
+            if (msg.type === 'res') {
+              const res = msg as unknown as ProtocolResponse;
+              if (res.ok) {
+                console.log('[OpenClaw] Connected!', JSON.stringify(res.payload, null, 2));
+                if (!settled) {
+                  settled = true;
+                  connected = true;
+                  // Switch to normal message handling
+                  ws!.onmessage = (e) => handleMessage(e.data);
+                  resolve();
+                }
+              } else {
+                console.error('[OpenClaw] Rejected:', JSON.stringify(res.error, null, 2));
+                if (!settled) {
+                  settled = true;
+                  const reason = (res.error as any)?.message ?? (res.error as any)?.details?.reason ?? 'Connection rejected';
+                  reject(new Error(reason));
+                }
+              }
+              return;
+            }
+
+            // Any other message type during handshake
+            console.log('[OpenClaw] Unhandled during handshake:', JSON.stringify(msg, null, 2));
           };
-
-          // If no message comes within 3s, assume connected (some gateways
-          // don't send an initial message with query param auth)
-          setTimeout(() => {
-            if (!settled && ws?.readyState === WebSocket.OPEN) {
-              console.log('[OpenClaw] No initial message, assuming connected');
-              settled = true;
-              connected = true;
-              resolve();
-            }
-          }, 3000);
         };
 
         ws.onerror = (err) => {
