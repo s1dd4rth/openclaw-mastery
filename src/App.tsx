@@ -98,8 +98,35 @@ export default function App() {
   const moduleChecks = getModuleChecks(nav.moduleId);
 
   return (
-    <div className="app-layout">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-openclaw-bg font-body overflow-hidden">
+      {/* Top Navigation Bar (Exact Mirror of Unpacked) */}
+      <nav className="fixed top-0 left-0 right-0 h-[48px] bg-openclaw-bg/92 backdrop-blur-[20px] border-b border-openclaw-border z-50 flex items-center px-[1.5rem] justify-between transition-all duration-300">
+        <div className="flex items-center gap-[1.5rem]">
+          <div className="font-sans font-extrabold text-[0.82rem] tracking-tighter text-openclaw-dark select-none">
+            Open<span className="text-openclaw-red">Claw</span>
+          </div>
+          
+          <div className="hidden lg:flex items-center gap-4">
+            {['Topology', 'Loop', 'Architecture', 'Channels', 'Plugins', 'Skills', 'Memory', 'Safety', 'Deploy'].map((link) => (
+              <span key={link} className="text-[0.65rem] font-bold text-openclaw-dark/30 uppercase tracking-widest cursor-default">
+                {link}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <a
+            href="https://s1dd4rth.github.io/openclaw-mastery/openclaw-unpacked.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[0.65rem] font-bold text-openclaw-dark/40 hover:text-openclaw-dark transition-all duration-200 uppercase tracking-tight flex items-center gap-1.5"
+          >
+            Architecture Guide <span className="opacity-40 text-[10px]">↗</span>
+          </a>
+        </div>
+      </nav>
+
       <Sidebar
         moduleDropdownOpen={moduleDropdownOpen}
         setModuleDropdownOpen={setModuleDropdownOpen}
@@ -112,26 +139,58 @@ export default function App() {
       />
 
       {/* Main content */}
-      <main className="app-main p-6 md:p-8">
-        {/* Module header */}
-        <div className="mb-8">
-          <div className="text-sm font-semibold text-openclaw-red mb-2 tracking-wide uppercase">
-            {currentModule.shortTitle}
-          </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight">
-            {currentModule.title}
-          </h1>
-          <p className="text-lg text-slate-600 max-w-3xl leading-relaxed">
-            {currentModule.description}
-          </p>
-        </div>
+      <main className="flex-1 overflow-y-auto pt-[48px] px-6 md:px-12 lg:px-20">
+        <div className="max-w-screen-xl mx-auto py-24">
+          {/* Module Hero (Mirroring Unpacked) */}
+          <header className="mb-24 flex flex-col items-center text-center relative">
+            {/* Dynamic Background Glow */}
+            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(204,59,42,0.04)_0%,transparent_70%)] pointer-events-none -z-10" />
 
-        {/* Phase title */}
-        {!isValidationPhase && (
-          <h2 className="text-xl font-bold text-slate-800 mb-6">
-            Phase: {currentPhase.title}
-          </h2>
-        )}
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
+              <span className="font-mono text-[0.58rem] font-bold uppercase tracking-[1.5px] text-[#cc3b2a] bg-[#cc3b2a]/5 px-3 py-1.5 rounded-full border border-[#cc3b2a]/15">
+                Module {MODULES_DATA.findIndex(m => m.id === nav.moduleId) + 1} · Internalized
+              </span>
+              <span className="font-mono text-[0.58rem] font-bold uppercase tracking-[1.5px] text-[#2d8f52] bg-[#2d8f52]/5 px-3 py-1.5 rounded-full border border-[#2d8f52]/15">
+                {currentPhase.title} · Step {nav.stepIndex + 1}
+              </span>
+            </div>
+
+            <div className="max-w-4xl space-y-8 mb-16">
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <h1 className="text-6xl md:text-[5rem] font-extrabold text-openclaw-dark font-sans tracking-[-0.5px] leading-[1.05] mb-8">
+                  {currentModule.title.split(' ').slice(0, -1).join(' ')} <br/>
+                  <span className="text-openclaw-red">{currentModule.title.split(' ').slice(-1)}</span>
+                </h1>
+                <p className="text-xl font-medium text-openclaw-dark/50 max-w-[580px] mx-auto leading-[1.8]">
+                  {currentModule.description}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+              <div className="flex flex-col items-center gap-2">
+                <div className="text-2xl font-black text-openclaw-red">{(moduleChecks.passed / moduleChecks.total * 100).toFixed(0)}%</div>
+                <div className="text-[0.55rem] font-bold text-openclaw-dark/30 uppercase tracking-[2px] font-mono">Mastery</div>
+              </div>
+              <div className="w-[1px] h-8 bg-openclaw-border" />
+              <div className="flex flex-col items-center gap-2">
+                <div className="text-2xl font-black text-openclaw-dark tabular-nums">{moduleChecks.passed}/{moduleChecks.total}</div>
+                <div className="text-[0.55rem] font-bold text-openclaw-dark/30 uppercase tracking-[2px] font-mono">Checks</div>
+              </div>
+              <div className="w-[1px] h-8 bg-openclaw-border" />
+              <div className="flex items-center gap-4 text-left">
+                <div className="w-10 h-10 rounded-xl bg-openclaw-bg3 flex items-center justify-center border border-openclaw-border">
+                  <div className="w-3 h-3 rounded-full bg-openclaw-red animate-pulse shadow-[0_0_12px_rgba(204,59,42,0.3)]" />
+                </div>
+                <div>
+                  <div className="text-[0.55rem] font-bold text-openclaw-dark/30 uppercase tracking-[2px] font-mono leading-none mb-1">Platform</div>
+                  <div className="text-sm font-black text-openclaw-dark leading-none">Curriculum Live</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="w-full h-[1px] bg-openclaw-border mt-20" />
+          </header>
 
         {/* Content */}
         {isValidationPhase ? (
@@ -165,6 +224,7 @@ export default function App() {
             onNavigateStep={index => setNav({ stepIndex: index })}
           />
         )}
+        </div>
       </main>
     </div>
   );

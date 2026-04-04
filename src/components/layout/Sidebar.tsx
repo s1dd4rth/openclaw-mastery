@@ -2,7 +2,6 @@ import { useRef, useEffect } from 'react';
 import { ChevronDown, ChevronRight, GraduationCap } from 'lucide-react';
 import { MODULES_DATA } from '../../data/modules';
 import type { Module } from '../../data/types';
-import { LogoIcon } from '../ui/LogoIcon';
 
 interface SidebarProps {
   moduleDropdownOpen: boolean;
@@ -39,39 +38,43 @@ export const Sidebar = ({
   }, [moduleDropdownOpen, setModuleDropdownOpen]);
 
   return (
-    <div className="app-sidebar flex flex-col bg-white">
-      {/* Logo */}
-      <div className="flex items-center gap-3 p-6 border-b border-slate-200">
-        <LogoIcon className="w-8 h-8 flex-shrink-0" />
-        <span className="text-xl tracking-tight text-slate-900 flex whitespace-nowrap">
-          <span className="font-extrabold">OpenClaw</span>
-          <span className="font-light ml-1 text-slate-500">Mastery</span>
-        </span>
+    <div className="w-72 flex flex-col bg-white border-r border-openclaw-border h-full relative z-40">
+      {/* Logo Section */}
+      <div className="p-8 pb-6">
+        <div className="flex flex-col gap-1">
+          <div className="font-sans font-extrabold text-2xl tracking-tighter text-openclaw-dark select-none">
+            Open<span className="text-openclaw-red">Claw</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-openclaw-red/30" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-openclaw-dark/30">Mastery Course</p>
+          </div>
+        </div>
       </div>
 
       {/* Module Selector */}
-      <div className="p-4 border-b border-slate-200 relative" ref={dropdownRef}>
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 px-1">
-          Module
+      <div className="px-4 pb-6 border-b border-openclaw-border relative" ref={dropdownRef}>
+        <div className="text-[11px] font-bold text-openclaw-dark/40 uppercase tracking-[0.15em] mb-2 px-2">
+          Course Module
         </div>
         <button
           onClick={() => setModuleDropdownOpen(!moduleDropdownOpen)}
-          className="w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-left shadow-sm hover:border-openclaw-red transition-colors"
+          className="w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-openclaw-bg3 border border-openclaw-border rounded-xl text-left shadow-sm hover:border-openclaw-red transition-all duration-200"
         >
           <div className="flex items-center gap-2 truncate">
             <currentModule.icon size={16} className="text-openclaw-red flex-shrink-0" />
-            <span className="font-medium text-sm truncate text-slate-900">
+            <span className="font-semibold text-sm truncate text-openclaw-dark">
               {currentModule.shortTitle}
             </span>
           </div>
           <ChevronDown
             size={16}
-            className={`text-slate-400 transition-transform ${moduleDropdownOpen ? 'rotate-180' : ''}`}
+            className={`text-openclaw-dark/40 transition-transform duration-200 ${moduleDropdownOpen ? 'rotate-180' : ''}`}
           />
         </button>
 
         {moduleDropdownOpen && (
-          <div className="absolute top-full left-4 right-4 mt-2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-[60vh] overflow-y-auto py-1">
+          <div className="absolute top-full left-4 right-4 mt-2 bg-white border border-openclaw-border rounded-xl shadow-xl z-50 max-h-[60vh] overflow-y-auto py-1.5 animate-in fade-in slide-in-from-top-1">
             {MODULES_DATA.map(mod => (
               <button
                 key={mod.id}
@@ -79,13 +82,13 @@ export const Sidebar = ({
                   onModuleChange(mod.id);
                   setModuleDropdownOpen(false);
                 }}
-                className={`w-full text-left px-3 py-2.5 text-sm flex items-center gap-3 hover:bg-slate-50 transition-colors
-                  ${activeModuleId === mod.id ? 'bg-red-50 text-openclaw-red font-medium' : 'text-slate-700'}
+                className={`w-full text-left px-3 py-2.5 text-sm flex items-center gap-3 hover:bg-openclaw-bg3 transition-colors
+                  ${activeModuleId === mod.id ? 'bg-openclaw-bg3/50 text-openclaw-red font-semibold' : 'text-openclaw-dark/70'}
                 `}
               >
                 <mod.icon
                   size={16}
-                  className={activeModuleId === mod.id ? 'text-openclaw-red' : 'text-slate-400'}
+                  className={activeModuleId === mod.id ? 'text-openclaw-red' : 'text-openclaw-dark/30'}
                 />
                 <span className="truncate">{mod.shortTitle}</span>
               </button>
@@ -95,51 +98,59 @@ export const Sidebar = ({
       </div>
 
       {/* Phase list */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-3 mt-2">
-          Phases
-        </div>
-        {currentModule.phases.map(phase => {
-          const Icon = phase.icon;
-          const isActive = activePhaseId === phase.id;
-          return (
-            <button
-              key={phase.id}
-              onClick={() => onPhaseChange(phase.id)}
-              className={`
-                w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left text-sm font-medium
-                ${isActive
-                  ? 'bg-openclaw-red text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}
-              `}
-            >
-              <Icon size={18} className={isActive ? 'text-white' : 'text-slate-400'} />
-              {phase.title}
-              {isActive && <ChevronRight size={16} className="ml-auto opacity-50" />}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Extra Resources */}
-      <div className="p-4 border-t border-slate-200">
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">
-          Resources
-        </div>
-        <a 
-          href="https://s1dd4rth.github.io/openclaw-mastery/openclaw-unpacked.html" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors text-sm font-medium"
-        >
-          <div className="p-1.5 bg-red-50 rounded-md text-openclaw-red">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
+      <nav className="flex-1 p-4 space-y-8 overflow-y-auto mt-4">
+        <div className="space-y-3">
+          <div className="px-2 flex items-center gap-2">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-openclaw-dark/40">
+              Phases
+            </h2>
           </div>
-          <span>OpenClaw Unpacked</span>
-        </a>
-      </div>
+          <div className="space-y-1">
+            {currentModule.phases.map(phase => {
+              const Icon = phase.icon;
+              const isActive = activePhaseId === phase.id;
+              return (
+                <button
+                  key={phase.id}
+                  onClick={() => onPhaseChange(phase.id)}
+                  className={`
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-left text-sm font-medium group relative
+                    ${isActive
+                      ? 'bg-openclaw-bg3 text-openclaw-dark shadow-sm'
+                      : 'text-openclaw-dark/60 hover:bg-openclaw-bg3/50 hover:text-openclaw-dark'}
+                  `}
+                >
+                  <Icon size={18} className={isActive ? 'text-openclaw-red' : 'text-openclaw-dark/30 group-hover:text-openclaw-dark/50'} />
+                  <span className="truncate">{phase.title}</span>
+                  {isActive && <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-openclaw-red rounded-r-full" />}
+                  {isActive && <ChevronRight size={14} className="ml-auto opacity-40" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Extra Resources */}
+        <div className="pt-4 border-t border-openclaw-border space-y-3">
+          <div className="px-2 flex items-center gap-2">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-openclaw-dark/40">
+              Resources
+            </h2>
+          </div>
+          <div className="space-y-1">
+            <a 
+              href="https://s1dd4rth.github.io/openclaw-mastery/openclaw-unpacked.html" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-openclaw-dark/60 hover:bg-openclaw-bg3/50 hover:text-openclaw-dark transition-all duration-200 group"
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-openclaw-dark/10 group-hover:bg-openclaw-dark/20 transition-colors" />
+              <span className="text-sm font-medium tracking-tight">OpenClaw Unpacked</span>
+              <span className="ml-auto text-[10px] text-openclaw-dark/30 group-hover:text-openclaw-dark/50 transition-colors">↗</span>
+            </a>
+          </div>
+        </div>
+      </nav>
 
       {/* Course progress */}
       <div className="p-4 border-t border-slate-200">

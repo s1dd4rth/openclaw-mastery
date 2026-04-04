@@ -49,20 +49,27 @@ export const StepEngine = ({
       />
 
       {isLocked ? (
-        <div className="bg-slate-50 rounded-xl p-8 text-center border border-slate-200">
-          <p className="text-slate-400 text-sm">
+        <div className="bg-openclaw-bg3 rounded-xl p-10 text-center border border-openclaw-border">
+          <p className="text-openclaw-dark/40 text-sm font-medium">
             Complete the previous step to unlock this one.
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-10">
           {/* Step title */}
-          <h3 className="text-lg font-bold text-slate-900">
-            Step {currentIndex + 1}: {step.title}
-          </h3>
+          <div className="flex items-baseline gap-4 border-b border-openclaw-border pb-4">
+            <span className="text-4xl font-black text-openclaw-red opacity-20 tabular-nums leading-none">
+              {String(currentIndex + 1).padStart(2, '0')}
+            </span>
+            <h3 className="text-xl font-bold text-openclaw-dark tracking-tight font-sans">
+              {step.title}
+            </h3>
+          </div>
 
           {/* Learn */}
-          <StepLearn content={step.learn} />
+          <div className="bg-openclaw-bg2 rounded-2xl p-8 border border-openclaw-border shadow-sm">
+            <StepLearn content={step.learn} />
+          </div>
 
           {/* Do */}
           {step.do && (
@@ -90,17 +97,17 @@ export const StepEngine = ({
           {!step.do && !step.verify && !completedSteps[currentIndex] && (
             <button
               onClick={() => onMarkComplete(step.id)}
-              className="w-full py-3 bg-openclaw-red text-white rounded-xl font-semibold text-sm hover:bg-red-600 transition-colors"
+              className="w-full py-4 bg-openclaw-red text-white rounded-xl font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-openclaw-red/20"
             >
               I've done this — continue
             </button>
           )}
 
           {/* Navigation between steps */}
-          {completedSteps[currentIndex] && currentIndex < steps.length - 1 && (
+          {(completedSteps[currentIndex] || isStepComplete(step.id)) && currentIndex < steps.length - 1 && (
             <button
               onClick={() => onNavigateStep(currentIndex + 1)}
-              className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold text-sm hover:bg-emerald-600 transition-colors"
+              className="w-full py-4 bg-openclaw-dark text-white rounded-xl font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-openclaw-dark/10"
             >
               Next Step: {steps[currentIndex + 1]?.title}
             </button>

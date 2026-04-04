@@ -59,8 +59,8 @@ export const StepDo = ({
     <div className="space-y-3">
       {/* User input field if required */}
       {requiresInput && (
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+        <div className="bg-openclaw-bg3 p-4 rounded-xl border border-openclaw-border mb-4">
+          <label className="block text-[11px] font-bold text-openclaw-dark/50 uppercase tracking-wider mb-2 px-1">
             {requiresInput.label}
           </label>
           <input
@@ -68,37 +68,37 @@ export const StepDo = ({
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
             placeholder={requiresInput.placeholder}
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-openclaw-red/30 focus:border-openclaw-red"
+            className="w-full px-4 py-3 bg-white border border-openclaw-border rounded-lg text-sm font-medium text-openclaw-dark placeholder:text-openclaw-dark/20 focus:outline-none focus:ring-2 focus:ring-openclaw-red/10 focus:border-openclaw-red transition-all"
           />
         </div>
       )}
 
       {/* Prompt display + action */}
-      <div className="rounded-xl border-2 border-openclaw-red/20 bg-gradient-to-br from-red-50 to-rose-50 shadow-sm overflow-hidden">
-        <div className="px-4 py-3 text-sm text-slate-700 font-mono leading-relaxed select-all">
+      <div className="rounded-2xl border border-openclaw-border bg-white shadow-sm overflow-hidden">
+        <div className="px-6 py-5 text-sm text-openclaw-dark/80 font-mono leading-relaxed select-all bg-openclaw-bg/30">
           {prompt}
         </div>
-        <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-openclaw-red/10 border-t border-openclaw-red/15">
-          <div className="flex items-center gap-3 w-full">
+        <div className="flex items-center justify-between gap-3 px-6 py-4 bg-openclaw-bg3 border-t border-openclaw-border">
+          <div className="flex flex-wrap items-center gap-4 w-full">
             <button
               onClick={handleCopyAndExecute}
               disabled={!!requiresInput && !inputValue}
-              className="flex items-center gap-2 px-4 py-2 bg-openclaw-red text-white rounded-lg text-sm font-semibold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-6 py-2.5 bg-openclaw-red text-white rounded-xl text-sm font-bold hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:grayscale disabled:scale-100 transition-all shadow-md shadow-openclaw-red/20"
             >
               {copied ? (
                 <>
-                  <Check size={14} />
-                  Copied!
+                  <Check size={16} strokeWidth={3} />
+                  Copied
                 </>
               ) : (
                 <>
-                  <Copy size={14} />
-                  Copy &amp; Run in Claw
+                  <Copy size={16} strokeWidth={2.5} />
+                  Copy &amp; Paste to Claw
                 </>
               )}
             </button>
             {copied && (
-              <span className="text-xs text-emerald-700 font-medium">
+              <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-3 py-1 rounded-full animate-in fade-in slide-in-from-left-2">
                 Now switch to your Claw's chat tab and paste it there.
               </span>
             )}

@@ -22,14 +22,14 @@ export const StepVerify = ({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ShieldCheck size={18} className="text-slate-400" />
-          <span className="text-sm font-semibold text-slate-700">Verify</span>
+          <ShieldCheck size={18} className="text-openclaw-dark/30" />
+          <span className="text-sm font-bold text-openclaw-dark uppercase tracking-widest">Verify</span>
         </div>
         <div className="flex gap-2">
           {!allPassed && (
             <button
               onClick={onSkip}
-              className="flex items-center gap-1 px-2 py-1.5 text-xs text-slate-400 hover:text-slate-600 transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-openclaw-dark/40 hover:text-openclaw-red transition-colors bg-openclaw-bg3 rounded-full border border-openclaw-border"
               title="Skip verification"
             >
               <SkipForward size={12} />
@@ -39,7 +39,7 @@ export const StepVerify = ({
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="grid gap-3">
         {checks.map(check => (
           <CheckResult
             key={check.id}
@@ -53,8 +53,8 @@ export const StepVerify = ({
         ))}
       </div>
 
-      <p className="text-xs text-slate-400 italic">
-        Click each check to toggle it pass / fail once you've verified it manually in Claw.
+      <p className="text-[11px] text-openclaw-dark/40 italic font-medium px-1">
+        Click each check to toggle it pass/fail once you've verified it manually in Claw.
       </p>
     </div>
   );
