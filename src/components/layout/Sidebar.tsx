@@ -121,6 +121,26 @@ export const Sidebar = ({
         })}
       </nav>
 
+      {/* Extra Resources */}
+      <div className="p-4 border-t border-slate-200">
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">
+          Resources
+        </div>
+        <a 
+          href="/openclaw-unpacked.html" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors text-sm font-medium"
+        >
+          <div className="p-1.5 bg-red-50 rounded-md text-openclaw-red">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <span>OpenClaw Unpacked</span>
+        </a>
+      </div>
+
       {/* Course progress */}
       <div className="p-4 border-t border-slate-200">
         <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-4">
