@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Unpacked — Architecture of an Autonomous Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf9f6;--bg2:#fff;--bg3:#f3f1ed;--bg4:#ebe8e2;--border:#e2dfd8;--border2:#cdc9c0;--text:#1a1815;--text2:#6b6560;--text3:#9e978e;--accent:#cc3b2a;--accent-d:rgba(204,59,42,.08);--accent-b:rgba(204,59,42,.15);--green:#2d8f52;--green-d:rgba(45,143,82,.07);--green-b:rgba(45,143,82,.14);--red:#8b3a3a;--red-d:rgba(139,58,58,.07);--red-b:rgba(139,58,58,.14);--blue:#3570b0;--blue-d:rgba(53,112,176,.07);--blue-b:rgba(53,112,176,.14);--purple:#7b56b0;--purple-d:rgba(123,86,176,.07);--purple-b:rgba(123,86,176,.14);--amber:#b07030;--amber-d:rgba(176,112,48,.07);--amber-b:rgba(176,112,48,.14);--teal:#2a8a7a;--teal-d:rgba(42,138,122,.07);--teal-b:rgba(42,138,122,.14);--pink:#b04080;--pink-d:rgba(176,64,128,.07);--pink-b:rgba(176,64,128,.14);--ff:'Geologica',sans-serif;--fm:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{background:var(--bg);color:var(--text);font-family:var(--ff);font-weight:400;line-height:1.7;overflow-x:hidden}::selection{background:var(--accent);color:#fff}
+.ic,.ic *{fill:none!important}.ic{width:18px;height:18px;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;display:inline-block;vertical-align:middle}.ic-sm{width:14px;height:14px}.ic-lg{width:20px;height:20px}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,249,246,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:48px;display:flex;align-items:center;gap:1.5rem;padding:0 1.5rem}
+.nl{font-size:.82rem;font-weight:700;white-space:nowrap;flex-shrink:0}.nl span{color:var(--accent)}.nk{display:flex;gap:.1rem;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none;mask-image:linear-gradient(90deg,#000 92%,transparent)}.nk::-webkit-scrollbar{display:none}.nk a{color:var(--text3);text-decoration:none;font-size:.65rem;font-weight:500;padding:.25rem .45rem;border-radius:5px;transition:all .2s;white-space:nowrap}.nk a:hover{color:var(--text);background:var(--bg3)}
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:6rem 2rem 4rem;position:relative}.hero::before{content:'';position:absolute;top:-150px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(ellipse,rgba(204,59,42,.06) 0%,transparent 60%);pointer-events:none}
+.hb{display:flex;gap:.75rem;margin-bottom:2.5rem;animation:fu .7s ease both}.badge{font-family:var(--fm);font-size:.58rem;letter-spacing:1.5px;text-transform:uppercase;padding:.3rem .8rem;border-radius:100px;border:1px solid var(--border)}.badge.g{color:var(--accent);border-color:var(--accent-b);background:var(--accent-d)}.badge.gr{color:var(--green);border-color:var(--green-b);background:var(--green-d)}
+.hero h1{font-size:clamp(3rem,7vw,5rem);font-weight:800;line-height:1.05;margin-bottom:1.5rem;animation:fu .7s ease .1s both;letter-spacing:-.5px}.hero h1 .accent{color:var(--accent)}
+.hero-sub{font-size:1rem;color:var(--text2);max-width:580px;margin-bottom:3rem;animation:fu .7s ease .2s both;line-height:1.8}.hero-sub strong{color:var(--text);font-weight:600}
+.hs{display:flex;gap:2.5rem;animation:fu .7s ease .35s both;flex-wrap:wrap;justify-content:center}.hsn{font-size:2rem;font-weight:800;color:var(--accent)}.hsl{font-family:var(--fm);font-size:.55rem;color:var(--text3);text-transform:uppercase;letter-spacing:2px;margin-top:.1rem}
+.hc{margin-top:3rem;animation:fu .7s ease .5s both}.hc a{font-size:.78rem;font-weight:500;color:var(--text2);text-decoration:none;border:1px solid var(--border);padding:.6rem 1.5rem;border-radius:100px;transition:all .3s}.hc a:hover{color:var(--accent);border-color:var(--accent)}
+@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+section{padding:5rem 2rem;max-width:1100px;margin:0 auto}.st{font-size:clamp(1.5rem,3vw,2rem);font-weight:700;margin-bottom:.5rem;letter-spacing:-.2px}.sd{color:var(--text2);font-size:.9rem;max-width:620px;margin-bottom:2.5rem}
+.doc-link{font-family:var(--fm);font-size:.6rem;color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .5rem;border-radius:4px;border:1px solid var(--accent-b);background:var(--accent-d);transition:all .2s;font-weight:500;margin-right:.4rem;margin-bottom:.4rem}.doc-link:hover{background:var(--accent-b)}
+.doc-links{display:flex;flex-wrap:wrap;gap:0;margin-top:-.5rem;margin-bottom:2rem}
+.divider{max-width:1100px;margin:0 auto;height:1px;background:var(--border)}
+/* Loop */
+.lv{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:2.5rem 1rem;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03)}.lv::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.ln{display:flex;align-items:flex-start;justify-content:space-between;position:relative;padding:.5rem 0}.lnd{display:flex;flex-direction:column;align-items:center;flex:1;cursor:pointer;z-index:2;padding:0 .1rem}
+.lc{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border);background:var(--bg);margin-bottom:.6rem;transition:all .3s}.lnd:hover .lc{border-color:var(--accent);box-shadow:0 0 24px var(--accent-d)}
+.lnl{font-size:.72rem;font-weight:600;text-align:center;margin-bottom:.12rem}.lns{font-size:.58rem;color:var(--text3);text-align:center;line-height:1.4;max-width:95px}
+.lbb{text-align:center;margin-top:1.5rem;padding-top:1.25rem;border-top:1px dashed var(--border)}.lbb span{font-family:var(--fm);font-size:.62rem;color:var(--accent);background:var(--accent-d);padding:.25rem .8rem;border-radius:100px;border:1px solid var(--accent-b)}
+/* Detail panel */
+.dp{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-top:1.25rem;display:none;gap:1rem}.dp.vis{display:flex}
+.dp-i{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border);background:var(--bg2);color:var(--text2)}
+.dp h4{font-size:.88rem;font-weight:600;margin-bottom:.15rem}.dp-t{font-family:var(--fm);font-size:.56rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.4rem;color:var(--accent)}.dp p{font-size:.8rem;color:var(--text2);line-height:1.75}
+.dp-src{font-family:var(--fm);font-size:.55rem;color:var(--text3);margin-top:.5rem;display:flex;flex-wrap:wrap;gap:.3rem}.dp-src a{color:var(--accent);text-decoration:none}.dp-src a:hover{text-decoration:underline}
+/* Treemap */
+.tw{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+.tl{display:flex;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap}.tli{display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--text2);font-weight:500}.tld{width:9px;height:9px;border-radius:3px}
+.tm{display:grid;grid-template-columns:2fr 1.5fr 1.2fr 1fr 1fr;grid-template-rows:1.3fr 1fr .6fr;gap:3px;height:300px}
+.tc{border-radius:6px;padding:.6rem;cursor:pointer;transition:all .25s;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}.tc:hover{filter:brightness(.94);transform:scale(1.01)}
+.tcn{font-family:var(--fm);font-size:.58rem;font-weight:500;color:rgba(0,0,0,.72)}.tcd{font-family:var(--fm);font-size:.46rem;color:rgba(0,0,0,.35);margin-top:auto}
+/* Pills */
+.pg{margin-bottom:1.25rem}.pgl{font-family:var(--fm);font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:2px;margin-bottom:.5rem;font-weight:500}
+.ps{display:flex;flex-wrap:wrap;gap:.35rem}.pill{font-family:var(--fm);font-size:.6rem;padding:.25rem .6rem;border-radius:5px;border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:all .2s;background:var(--bg2);white-space:nowrap}
+.pill:hover,.pill.act{border-color:var(--accent);color:var(--accent);background:var(--accent-d)}
+.pill.pg:hover,.pill.pg.act{border-color:var(--green);color:var(--green);background:var(--green-d)}
+.pill.pb:hover,.pill.pb.act{border-color:var(--blue);color:var(--blue);background:var(--blue-d)}
+.pill.pp:hover,.pill.pp.act{border-color:var(--purple);color:var(--purple);background:var(--purple-d)}
+.pill.pa:hover,.pill.pa.act{border-color:var(--amber);color:var(--amber);background:var(--amber-d)}
+.pill.pr:hover,.pill.pr.act{border-color:var(--red);color:var(--red);background:var(--red-d)}
+.pill.pt:hover,.pill.pt.act{border-color:var(--teal);color:var(--teal);background:var(--teal-d)}
+.pill.pk:hover,.pill.pk.act{border-color:var(--pink);color:var(--pink);background:var(--pink-d)}
+/* Gate */
+.gv{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.75rem 1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+.gpl{font-family:var(--fm);font-size:.56rem;text-transform:uppercase;letter-spacing:2px;margin-bottom:.4rem;padding-left:.5rem;font-weight:500}
+.gp{display:flex;align-items:center;gap:.35rem}.gs{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .5rem;text-align:center;transition:all .3s}.gs:hover{border-color:var(--border2);background:var(--bg3)}
+.gsl{font-family:var(--fm);font-size:.5rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.2rem;font-weight:500}.gs h4{font-size:.75rem;font-weight:600;margin-bottom:.1rem}.gs p{font-size:.6rem;color:var(--text3)}.ga{font-family:var(--fm);color:var(--border2);font-size:.8rem;flex-shrink:0}
+/* Sessions */
+.sess-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+.sess-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;border-top:2.5px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.03)}
+.sess-card.s-main{border-top-color:var(--green)}.sess-card.s-group{border-top-color:var(--blue)}.sess-card.s-sandbox{border-top-color:var(--red)}
+.sess-card h4{font-size:.88rem;font-weight:600;margin-bottom:.25rem}.sess-card .stag{font-family:var(--fm);font-size:.52rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:.6rem;display:inline-block;font-weight:500}.sess-card p{font-size:.78rem;color:var(--text2);line-height:1.6}
+/* Cards */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.fc{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.1rem;transition:all .25s;border-left:2.5px solid var(--border);box-shadow:0 1px 2px rgba(0,0,0,.02)}.fc:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.05)}
+.fc h4{font-size:.85rem;font-weight:600;margin-bottom:.2rem}.fc p{font-size:.75rem;color:var(--text2);line-height:1.65}.fc .ft{font-family:var(--fm);font-size:.5rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem;display:inline-flex;align-items:center;gap:.3rem;font-weight:500}
+/* Timeline */
+.tline{position:relative;padding-left:2.5rem}.tline::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:1px;background:linear-gradient(180deg,var(--accent),var(--border))}
+.te{position:relative;margin-bottom:1.75rem;padding-left:.8rem}.te:last-child{margin-bottom:0}
+.td{position:absolute;left:-2.5rem;top:.2rem;width:19px;height:19px;border-radius:50%;background:var(--bg);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center}.tdi{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.tt{font-family:var(--fm);font-size:.68rem;color:var(--accent);margin-bottom:.1rem;font-weight:500}.te h4{font-size:.9rem;font-weight:600;margin-bottom:.2rem}.te p{color:var(--text2);font-size:.8rem;line-height:1.7}
+.tags{display:flex;gap:.3rem;margin-top:.4rem;flex-wrap:wrap}.tag{font-family:var(--fm);font-size:.5rem;padding:.15rem .4rem;border-radius:3px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.tag.r{background:var(--green-d);color:var(--green);border:1px solid var(--green-b)}.tag.w{background:var(--amber-d);color:var(--amber);border:1px solid var(--amber-b)}.tag.gt{background:var(--red-d);color:var(--red);border:1px solid var(--red-b)}.tag.s{background:var(--purple-d);color:var(--purple);border:1px solid var(--purple-b)}
+/* Deploy */
+.deploy-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
+.deploy-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.02)}.deploy-card h4{font-size:.82rem;font-weight:600;margin-bottom:.35rem}.deploy-card p{font-size:.68rem;color:var(--text3);line-height:1.5}
+.deploy-card .dc-tag{font-family:var(--fm);font-size:.5rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem;display:inline-block;font-weight:500}
+/* Footer */
+footer{text-align:center;padding:3rem 2rem;border-top:1px solid var(--border);margin-top:1rem}.fl{font-size:1rem;font-weight:700;margin-bottom:.4rem}.fl span{color:var(--accent)}
+footer p{font-family:var(--fm);font-size:.6rem;color:var(--text3);line-height:2}footer a{color:var(--accent);text-decoration:none}
+.flinks{display:flex;justify-content:center;gap:1.5rem;margin-top:.75rem}.flinks a{font-family:var(--fm);font-size:.6rem;color:var(--text3);text-decoration:none;transition:color .2s;font-weight:500}.flinks a:hover{color:var(--accent)}
+.reveal{opacity:0;transform:translateY(25px);transition:opacity .6s ease,transform .6s ease}.reveal.vis{opacity:1;transform:translateY(0)}
+.topo-node rect{transition:filter .2s}.topo-node:hover rect{filter:brightness(.92)}
+@media(max-width:768px){nav{padding:0 .75rem;gap:.75rem}.nk{mask-image:linear-gradient(90deg,#000 85%,transparent)}section{padding:3.5rem 1rem}.hero{padding:5rem 1rem 3rem}.hs{gap:1rem}.ln{flex-wrap:wrap;justify-content:center;gap:.5rem}.tm{grid-template-columns:1fr 1fr;height:auto}.tc{min-height:55px;grid-row:auto!important;grid-column:auto!important}.gp{flex-direction:column}.ga{transform:rotate(90deg)}.fg,.sess-grid,.deploy-grid{grid-template-columns:1fr}.dp{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<nav><div class="nl">Open<span>Claw</span></div><div class="nk"><a href="#topology">Topology</a><a href="#loop">Loop</a><a href="#arch">Architecture</a><a href="#channels">Channels</a><a href="#plugins">Plugins</a><a href="#skills">Skills</a><a href="#memory">Memory</a><a href="#sessions">Sessions</a><a href="#gate">Safety</a><a href="#commands">Commands</a><a href="#nodes">Nodes</a><a href="#deploy">Deploy</a><a href="#ops">Ops</a></div></nav>
+
+<div class="hero">
+  <div class="hb"><span class="badge g">Open Source · MIT</span><span class="badge gr">Architecture Guide</span></div>
+  <h1>OpenClaw<br><span class="accent">Unpacked</span></h1>
+  <p class="hero-sub">How does an autonomous personal AI assistant actually work?<br>The <strong>PiEmbeddedRunner</strong> agent loop, <strong>24+ channels</strong>, <strong>plugin architecture</strong>, <strong>SQLite memory</strong>, and <strong>security model</strong>, mapped from source.</p>
+  <div class="hs"><div><div class="hsn">24+</div><div class="hsl">Channels</div></div><div><div class="hsn">50+</div><div class="hsl">Tools</div></div><div><div class="hsn">5</div><div class="hsl">Platforms</div></div><div><div class="hsn">346k</div><div class="hsl">Stars</div></div><div><div class="hsn">24.8k</div><div class="hsl">Commits</div></div></div>
+  <div class="hc"><a href="#loop">Explore Architecture ↓</a></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- TOPOLOGY -->
+<section id="topology">
+  <div class="reveal"><h2 class="st">System Topology</h2><p class="sd">Five boundaries: external channels and triggers, the Gateway on your machine, device nodes on your phone/Mac, external model providers, and external state the agent can reach via tools.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/concepts/architecture">→ Architecture</a><a class="doc-link" href="https://docs.openclaw.ai/gateway">→ Gateway</a><a class="doc-link" href="https://docs.openclaw.ai/gateway/security">→ Security</a></div></div>
+  <div class="reveal" style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.03);overflow-x:auto">
+    <div id="topoSvg" style="min-width:940px"></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- AGENT LOOP -->
+<section id="loop">
+  <div class="reveal"><h2 class="st">The Agent Loop</h2><p class="sd">The <code style="font-family:var(--fm);font-size:.85rem;color:var(--purple)">PiEmbeddedRunner</code> drives a continuous async loop. Messages arrive, context is compiled by <code style="font-family:var(--fm);font-size:.85rem;color:var(--blue)">prompt-builder.ts</code>, the Pi agent core streams tool calls, and results route back through <code style="font-family:var(--fm);font-size:.85rem;color:var(--green)">auto-reply.ts</code>.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/concepts/agent-loop">→ Agent Loop</a><a class="doc-link" href="https://docs.openclaw.ai/concepts/architecture">→ Architecture</a><a class="doc-link" href="https://docs.openclaw.ai/concepts/streaming">→ Streaming</a></div></div>
+  <div class="lv reveal"><div class="ln" id="loopRow"></div><div class="lbb"><span>↺ Tool results feed back into PiEmbeddedRunner · Loop repeats</span></div><div class="dp" id="ldp"><div class="dp-i" id="ldi"></div><div><h4 id="ldt">Click a node above</h4><p id="ldd">Each circle is a phase of the agent loop. Click to explore.</p><div class="dp-src" id="lds"></div></div></div></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ARCHITECTURE -->
+<section id="arch">
+  <div class="reveal"><h2 class="st">Architecture Explorer</h2><p class="sd">Eight subsystems. The Gateway orchestrates everything through a WebSocket control plane. Plugins extend channels, tools, memory, and model providers.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/concepts/architecture">→ Architecture</a><a class="doc-link" href="https://docs.openclaw.ai/gateway">→ Gateway Runbook</a><a class="doc-link" href="https://docs.openclaw.ai/gateway/configuration">→ Configuration</a></div></div>
+  <div class="tw reveal">
+    <div class="tl"><div class="tli"><div class="tld" style="background:var(--accent)"></div> Gateway</div><div class="tli"><div class="tld" style="background:var(--blue)"></div> Identity</div><div class="tli"><div class="tld" style="background:var(--green)"></div> Channels</div><div class="tli"><div class="tld" style="background:var(--purple)"></div> Skills</div><div class="tli"><div class="tld" style="background:var(--red)"></div> Safety</div><div class="tli"><div class="tld" style="background:var(--teal)"></div> Nodes</div><div class="tli"><div class="tld" style="background:var(--pink)"></div> Plugins</div><div class="tli"><div class="tld" style="background:var(--amber)"></div> Memory</div></div>
+    <div class="tm">
+      <div class="tc" style="background:rgba(204,59,42,.12);grid-row:1/3" onclick="ad('gw')"><div class="tcn">Gateway</div><div class="tcd">server.ts · WS · port 18789</div></div>
+      <div class="tc" style="background:rgba(53,112,176,.12);grid-row:1/3" onclick="ad('id')"><div class="tcn">Identity Engine</div><div class="tcd">prompt-builder · workspace</div></div>
+      <div class="tc" style="background:rgba(45,143,82,.12)" onclick="ad('ch')"><div class="tcn">Channels (24+)</div><div class="tcd">auto-reply.ts · routing</div></div>
+      <div class="tc" style="background:rgba(123,86,176,.12);grid-row:1/3" onclick="ad('sk')"><div class="tcn">Skills + Tools</div><div class="tcd">ClawHub · browser · sandbox</div></div>
+      <div class="tc" style="background:rgba(192,64,64,.12);grid-row:1/4" onclick="ad('sf')"><div class="tcn">Safety</div><div class="tcd">policy · pairing · sandbox</div></div>
+      <div class="tc" style="background:rgba(53,112,176,.18)" onclick="ad('soul')"><div class="tcn">SOUL.md</div><div class="tcd">immutable</div></div>
+      <div class="tc" style="background:rgba(53,112,176,.13)" onclick="ad('cfg')"><div class="tcn">Config</div><div class="tcd">JSON5 · env · defaults</div></div>
+      <div class="tc" style="background:rgba(42,138,122,.12)" onclick="ad('nd')"><div class="tcn">Nodes</div><div class="tcd">macOS · iOS · Android</div></div>
+      <div class="tc" style="background:rgba(176,64,128,.1)" onclick="ad('pl')"><div class="tcn">Plugins</div><div class="tcd">extensions/ · loader.ts</div></div>
+      <div class="tc" style="background:rgba(176,112,48,.12)" onclick="ad('mem')"><div class="tcn">Memory</div><div class="tcd">SQLite · index · search</div></div>
+      <div class="tc" style="background:rgba(123,86,176,.08)" onclick="ad('hub')"><div class="tcn">ClawHub</div><div class="tcd">registry</div></div>
+      <div class="tc" style="background:rgba(45,143,82,.08)" onclick="ad('vw')"><div class="tcn">Voice</div><div class="tcd">wake + talk</div></div>
+      <div class="tc" style="background:rgba(204,59,42,.08)" onclick="ad('ts')"><div class="tcn">Tailscale</div><div class="tcd">remote access</div></div>
+    </div>
+    <div class="dp" id="adp" style="margin-top:1rem"><div class="dp-i" id="adi"></div><div><h4 id="adt">Click a block</h4><div class="dp-t" id="adty">Architecture</div><p id="add">Each block is a subsystem. Click to explore.</p><div class="dp-src" id="ads"></div></div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CHANNELS -->
+<section id="channels">
+  <div class="reveal"><h2 class="st">Channel Catalog</h2><p class="sd">Core channels ship with OpenClaw. Additional channels load as plugins from <code style="font-family:var(--fm);font-size:.85rem;color:var(--purple)">extensions/</code>. All route through <code style="font-family:var(--fm);font-size:.85rem;color:var(--green)">auto-reply.ts</code>.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/channels">→ Channels</a><a class="doc-link" href="https://docs.openclaw.ai/channels/groups">→ Groups</a><a class="doc-link" href="https://docs.openclaw.ai/channels/troubleshooting">→ Troubleshooting</a></div></div>
+  <div class="reveal">
+    <div class="pg"><div class="pgl">Core Channels (in src/)</div><div class="ps">
+      <span class="pill pg" onclick="cd(this,'WhatsApp','Baileys. Link via openclaw channels login. Allowlist + group mention gating. src/whatsapp/','Messaging · Baileys · src/whatsapp/')">WhatsApp</span>
+      <span class="pill pg" onclick="cd(this,'Telegram','grammY. Bot token. Webhook or polling. Groups with requireMention. src/telegram/','Messaging · grammY · src/telegram/')">Telegram</span>
+      <span class="pill pg" onclick="cd(this,'Signal','signal-cli daemon. Direct + group. src/signal/','Messaging · signal-cli · src/signal/')">Signal</span>
+      <span class="pill pg" onclick="cd(this,'BlueBubbles','Recommended iMessage. BlueBubbles server + webhook. src/bluebubbles/','Messaging · src/bluebubbles/')">BlueBubbles</span>
+      <span class="pill pg" onclick="cd(this,'iMessage (Legacy)','macOS-only via imsg. src/imessage/','Messaging · src/imessage/')">iMessage</span>
+      <span class="pill pb" onclick="cd(this,'Slack','Bolt framework. Socket Mode. Threads. src/slack/','Workspace · Bolt · src/slack/')">Slack</span>
+      <span class="pill pb" onclick="cd(this,'Discord','discord.js. Slash/text commands. Guilds. src/discord/','Workspace · discord.js · src/discord/')">Discord</span>
+      <span class="pill pb" onclick="cd(this,'Google Chat','Chat API. Space routing. src/googlechat/','Workspace · src/googlechat/')">Google Chat</span>
+      <span class="pill pp" onclick="cd(this,'IRC','Classic protocol. src/irc/','Protocol · src/irc/')">IRC</span>
+      <span class="pill pp" onclick="cd(this,'WebChat','Built-in. Served from Gateway WS. src/web/','Built-in · src/web/')">WebChat</span>
+    </div></div>
+    <div class="pg"><div class="pgl">Plugin Channels (in extensions/)</div><div class="ps">
+      <span class="pill pa" onclick="cd(this,'Microsoft Teams','Bot Framework plugin. Tenant-scoped. extensions/msteams/','Plugin · extensions/msteams/')">MS Teams</span>
+      <span class="pill pa" onclick="cd(this,'Matrix','Decentralized protocol plugin. extensions/matrix/','Plugin · extensions/matrix/')">Matrix</span>
+      <span class="pill pa" onclick="cd(this,'WeChat','Official Tencent plugin. @tencent-weixin/openclaw-weixin','Plugin · npm package')">WeChat</span>
+      <span class="pill pa" onclick="cd(this,'Feishu','Lark/Feishu enterprise plugin.','Plugin · extensions/')">Feishu</span>
+      <span class="pill pa" onclick="cd(this,'LINE','LINE Messaging API plugin.','Plugin')">LINE</span>
+      <span class="pill pa" onclick="cd(this,'Mattermost','Self-hosted team chat plugin.','Plugin')">Mattermost</span>
+      <span class="pill pa" onclick="cd(this,'Nostr','Decentralized social plugin.','Plugin')">Nostr</span>
+      <span class="pill pa" onclick="cd(this,'Twitch','Twitch chat plugin.','Plugin')">Twitch</span>
+      <span class="pill pa" onclick="cd(this,'Nextcloud Talk','Self-hosted plugin.','Plugin')">Nextcloud</span>
+      <span class="pill pa" onclick="cd(this,'Tlon','Urbit Tlon plugin.','Plugin')">Tlon</span>
+      <span class="pill pa" onclick="cd(this,'Zalo','Zalo OA + personal plugin.','Plugin')">Zalo</span>
+      <span class="pill pa" onclick="cd(this,'Synology Chat','NAS chat plugin.','Plugin')">Synology</span>
+    </div></div>
+    <div class="dp" id="cdp"><div class="dp-i" id="cdi"></div><div><h4 id="cdt">Click a channel</h4><div class="dp-t" id="cdty">Channels</div><p id="cdd">Unified routing via auto-reply.ts. DM policies, group rules, allowlists per channel.</p></div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PLUGIN ARCHITECTURE -->
+<section id="plugins">
+  <div class="reveal"><h2 class="st">Plugin Architecture</h2><p class="sd">The plugin loader (<code style="font-family:var(--fm);font-size:.85rem;color:var(--purple)">src/plugins/loader.ts</code>) scans <code style="font-family:var(--fm);font-size:.85rem">extensions/</code> for packages declaring <code style="font-family:var(--fm);font-size:.85rem;color:var(--accent)">openclaw.extensions</code> in package.json. Four plugin types register into distinct slots.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/tools/skills">→ Skills</a><a class="doc-link" href="https://docs.openclaw.ai/concepts/models">→ Models</a></div></div>
+  <div class="fg reveal">
+    <div class="fc" style="border-left-color:var(--green)"><div class="ft" style="color:var(--green)">Channel Plugin</div><h4>New Messaging Surface</h4><p>Registers into the channel router. Implements auth, inbound parsing, access control, outbound formatting. MS Teams, Matrix, WeChat are all channel plugins.</p></div>
+    <div class="fc" style="border-left-color:var(--purple)"><div class="ft" style="color:var(--purple)">Tool Plugin</div><h4>New Capability</h4><p>Registers into the tool registry. Extends what the agent can do — browser, canvas, custom API integrations. Managed via ClawHub or workspace skills.</p></div>
+    <div class="fc" style="border-left-color:var(--amber)"><div class="ft" style="color:var(--amber)">Memory Plugin</div><h4>Storage Backend</h4><p>Registers into memory search. memory-core (extensions/memory-core/) provides SQLite-backed indexing and vector search. Replaceable with custom backends.</p></div>
+    <div class="fc" style="border-left-color:var(--blue)"><div class="ft" style="color:var(--blue)">Provider Plugin</div><h4>Model Backend</h4><p>Registers into model providers. Claude, GPT, Gemini, local models. OAuth + API key auth with failover chains. TypeBox schema validation.</p></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="reveal"><h2 class="st">Skill System</h2><p class="sd">50+ built-in tools. Sandboxed via Docker for non-main sessions. Skills managed through ClawHub or workspace directory.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/tools">→ Tools</a><a class="doc-link" href="https://docs.openclaw.ai/tools/skills">→ Skills</a><a class="doc-link" href="https://docs.openclaw.ai/tools/browser">→ Browser</a><a class="doc-link" href="https://docs.openclaw.ai/tools/skills-config">→ Skills Config</a></div></div>
+  <div class="reveal">
+    <div class="pg"><div class="pgl">Core</div><div class="ps"><span class="pill pg">bash</span><span class="pill pg">read</span><span class="pill pg">write</span><span class="pill pg">edit</span><span class="pill pg">process</span></div></div>
+    <div class="pg"><div class="pgl">Browser & Visual</div><div class="ps"><span class="pill pb">Browser Control</span><span class="pill pb">Canvas Push</span><span class="pill pb">Canvas Eval</span><span class="pill pb">Canvas Snapshot</span><span class="pill pb">A2UI</span></div></div>
+    <div class="pg"><div class="pgl">Nodes & Device</div><div class="ps"><span class="pill pt">Camera Snap</span><span class="pill pt">Camera Clip</span><span class="pill pt">Screen Record</span><span class="pill pt">location.get</span><span class="pill pt">system.run</span><span class="pill pt">system.notify</span></div></div>
+    <div class="pg"><div class="pgl">Agent Coordination</div><div class="ps"><span class="pill pp">sessions_list</span><span class="pill pp">sessions_history</span><span class="pill pp">sessions_send</span><span class="pill pp">sessions_spawn</span></div></div>
+    <div class="pg"><div class="pgl">Automation</div><div class="ps"><span class="pill pa">Cron Jobs</span><span class="pill pa">Webhooks</span><span class="pill pa">Gmail Pub/Sub</span></div></div>
+    <div class="pg"><div class="pgl">Platform & Voice</div><div class="ps"><span class="pill pk">Discord Actions</span><span class="pill pk">Slack Actions</span><span class="pill pk">Gateway Control</span><span class="pill pt">Voice Wake</span><span class="pill pt">Talk Mode</span><span class="pill pt">ElevenLabs TTS</span><span class="pill pt">Transcription</span></div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MEMORY -->
+<section id="memory">
+  <div class="reveal"><h2 class="st">Memory System</h2><p class="sd">Not flat markdown files. OpenClaw uses <strong>SQLite-backed memory</strong> with indexing and search, powered by the <code style="font-family:var(--fm);font-size:.85rem;color:var(--amber)">memory-core</code> plugin. The prompt-builder queries memory search to inject relevant context per task.</p>
+  <div class="doc-links"><a class="doc-link" href="https://deepwiki.com/openclaw/openclaw/7-memory-system">→ Memory System</a><a class="doc-link" href="https://deepwiki.com/openclaw/openclaw/7.2-memory-indexing">→ Indexing</a><a class="doc-link" href="https://deepwiki.com/openclaw/openclaw/7.3-memory-search">→ Search</a></div></div>
+  <div class="fg reveal">
+    <div class="fc" style="border-left-color:var(--amber)"><div class="ft" style="color:var(--amber)">Storage</div><h4>SQLite Backend</h4><p>Persistent storage via memory-core plugin in extensions/memory-core/. Replaces append-only markdown with structured, queryable storage.</p></div>
+    <div class="fc" style="border-left-color:var(--blue)"><div class="ft" style="color:var(--blue)">Indexing</div><h4>Memory Indexing</h4><p>Facts and session history indexed for retrieval. Automatic extraction from conversations. Structured for fast lookup by the Context Compiler.</p></div>
+    <div class="fc" style="border-left-color:var(--purple)"><div class="ft" style="color:var(--purple)">Search</div><h4>Memory Search</h4><p>The prompt-builder queries src/memory/ to find relevant context per task. Only matching facts injected — never the full history. Prevents context overflow.</p></div>
+    <div class="fc" style="border-left-color:var(--green)"><div class="ft" style="color:var(--green)">Workspace Files</div><h4>SOUL · USER · AGENTS · TOOLS</h4><p>Immutable directives (SOUL.md), owner profile (USER.md), persona routing (AGENTS.md), and capability defs (TOOLS.md) still live as markdown in ~/.openclaw/workspace/.</p></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SESSIONS -->
+<section id="sessions">
+  <div class="reveal"><h2 class="st">Session Model</h2><p class="sd"><code style="font-family:var(--fm);font-size:.85rem;color:var(--purple)">resolveSessionKey()</code> in sessions.ts determines session ID: <code style="font-family:var(--fm);font-size:.82rem">main</code> for direct, <code style="font-family:var(--fm);font-size:.82rem">dm:channel:id</code> for DMs, <code style="font-family:var(--fm);font-size:.82rem">group:channel:id</code> for groups.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/concepts/session">→ Sessions</a><a class="doc-link" href="https://docs.openclaw.ai/concepts/session-tool">→ Session Tools</a><a class="doc-link" href="https://docs.openclaw.ai/gateway/security">→ Security</a></div></div>
+  <div class="sess-grid reveal">
+    <div class="sess-card s-main"><div class="stag" style="color:var(--green)">Main Session</div><h4>Direct Chat</h4><p>1:1 with owner. Full host access. Tools run on machine. No sandbox. Session key: <code style="font-family:var(--fm);font-size:.7rem">main</code></p></div>
+    <div class="sess-card s-group"><div class="stag" style="color:var(--blue)">Group Session</div><h4>Channel / Group</h4><p>Isolated per-channel. Mention or always-on activation. Queue modes. Key: <code style="font-family:var(--fm);font-size:.7rem">group:channel:id</code></p></div>
+    <div class="sess-card s-sandbox"><div class="stag" style="color:var(--red)">Sandbox Session</div><h4>Docker Isolated</h4><p>Non-main in Docker via sandbox.ts. Allowlist: bash, read, write. Denylist: browser, canvas, nodes.</p></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SAFETY -->
+<section id="gate">
+  <div class="reveal"><h2 class="st">Safety & Security</h2><p class="sd">Three layers: inbound access control (DM pairing + allowlists), tool policy and exec security (profiles + ask mode), and sandbox isolation (Docker per-session). Run <code style="font-family:var(--fm);font-size:.85rem;color:var(--accent)">openclaw security audit</code> to check posture.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/gateway/security">→ Security</a><a class="doc-link" href="https://docs.openclaw.ai/gateway/sandboxing">→ Sandboxing</a><a class="doc-link" href="https://docs.openclaw.ai/gateway/sandbox-vs-tool-policy-vs-elevated">→ Sandbox vs Tool Policy</a><a class="doc-link" href="https://docs.openclaw.ai/security/formal-verification">→ Formal Verification</a></div></div>
+
+  <div class="gv reveal" style="margin-bottom:.75rem"><div class="gpl" style="color:var(--blue)">Layer 1 — Inbound Access Control</div><div class="gp"><div class="gs"><div class="gsl" style="color:var(--text3)">Unknown DM</div><h4>Pairing</h4><p>Code issued, msg ignored</p></div><div class="ga">→</div><div class="gs"><div class="gsl" style="color:var(--green)">Known DM</div><h4>Allowlisted</h4><p>openclaw pairing approve</p></div><div class="ga">→</div><div class="gs"><div class="gsl" style="color:var(--blue)">Groups</div><h4>Mention Gate</h4><p>requireMention · activation</p></div><div class="ga">→</div><div class="gs"><div class="gsl" style="color:var(--purple)">Context</div><h4>Visibility</h4><p>all · allowlist · quote</p></div></div></div>
+
+  <div class="gv reveal" style="margin-bottom:.75rem"><div class="gpl" style="color:var(--amber)">Layer 2 — Tool Policy & Exec Security</div><div class="gp"><div class="gs"><div class="gsl" style="color:var(--amber)">Profile</div><h4>Tool Profiles</h4><p>messaging · minimal · full</p></div><div class="ga">→</div><div class="gs"><div class="gsl" style="color:var(--accent)">Allow / Deny</div><h4>Tool Lists</h4><p>per-agent deny groups</p></div><div class="ga">→</div><div class="gs"><div class="gsl" style="color:var(--red)">Exec Security</div><h4>security + ask</h4><p>full · deny · always · off</p></div><div class="ga">→</div><div class="gs"><div class="gsl" style="color:var(--teal)">Elevated</div><h4>/elevated</h4><p>per-session toggle</p></div></div>
+  <div style="margin-top:.75rem;padding-top:.5rem;border-top:1px dashed var(--border)"><p style="font-size:.68rem;color:var(--text3);text-align:center;font-family:var(--fm);font-weight:500">Default for personal setups: security="full", ask="off" · Tighten per your threat model</p></div></div>
+
+  <div class="gv reveal"><div class="gpl" style="color:var(--red)">Layer 3 — Sandbox Isolation</div><div class="gp"><div class="gs"><div class="gsl" style="color:var(--green)">Main</div><h4>Full Host</h4><p>Direct execution</p></div><div class="ga">→</div><div class="gs"><div class="gsl" style="color:var(--blue)">Non-Main</div><h4>Docker</h4><p>per-session container</p></div><div class="ga">→</div><div class="gs"><div class="gsl" style="color:var(--red)">Restricted</div><h4>Tool Allow/Deny</h4><p>bash,read,write,edit ✓</p></div><div class="ga">→</div><div class="gs"><div class="gsl" style="color:var(--red)">Blocked</div><h4>Denied Tools</h4><p>browser,canvas,nodes ✗</p></div></div></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- COMMANDS -->
+<section id="commands">
+  <div class="reveal"><h2 class="st">Command Catalog</h2><p class="sd">Slash commands in any channel + CLI commands via Commander.js.</p>
+  <div class="doc-links"><a class="doc-link" href="https://deepwiki.com/openclaw/openclaw/9-commands-and-directives">→ Commands</a><a class="doc-link" href="https://deepwiki.com/openclaw/openclaw/9.3-directives">→ Directives</a><a class="doc-link" href="https://deepwiki.com/openclaw/openclaw/12-cli-reference">→ CLI Reference</a></div></div>
+  <div class="reveal">
+    <div class="pg"><div class="pgl">Chat Commands</div><div class="ps"><span class="pill pg">/new</span><span class="pill pg">/reset</span><span class="pill pg">/compact</span><span class="pill pg">/status</span><span class="pill pb">/think off|low|medium|high|xhigh</span><span class="pill" style="font-size:.5rem;color:var(--text3)">(GPT-5.2/Codex)</span><span class="pill pb">/verbose on|off</span><span class="pill pa">/usage off|tokens|full</span></div></div>
+    <div class="pg"><div class="pgl">Admin</div><div class="ps"><span class="pill pr">/restart</span><span class="pill pr">/activation mention|always</span><span class="pill pr">/elevated on|off</span></div></div>
+    <div class="pg"><div class="pgl">CLI (openclaw ...)</div><div class="ps"><span class="pill">onboard</span><span class="pill">gateway</span><span class="pill">agent</span><span class="pill">channels login</span><span class="pill">pairing approve</span><span class="pill">doctor</span><span class="pill pr">security audit</span><span class="pill">config</span><span class="pill">models</span><span class="pill">nodes</span><span class="pill">update</span></div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- NODES -->
+<section id="nodes">
+  <div class="reveal"><h2 class="st">Nodes & Companion Apps</h2><p class="sd">Gateway is the control plane. Nodes expose device capabilities via <code style="font-family:var(--fm);font-size:.85rem;color:var(--teal)">node.invoke</code> over WS.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/nodes">→ Nodes</a><a class="doc-link" href="https://docs.openclaw.ai/platforms/macos">→ macOS</a><a class="doc-link" href="https://docs.openclaw.ai/platforms/ios">→ iOS</a><a class="doc-link" href="https://docs.openclaw.ai/platforms/android">→ Android</a><a class="doc-link" href="https://docs.openclaw.ai/platforms/mac/canvas">→ Canvas</a></div></div>
+  <div class="fg reveal" id="nodeCards"></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DEPLOYMENT -->
+<section id="deploy">
+  <div class="reveal"><h2 class="st">Deployment Models</h2><p class="sd">Four patterns. Same client interfaces (CLI, Web UI, mobile apps) across all.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/start/getting-started">→ Getting Started</a><a class="doc-link" href="https://docs.openclaw.ai/install/docker">→ Docker</a><a class="doc-link" href="https://docs.openclaw.ai/gateway/tailscale">→ Tailscale</a><a class="doc-link" href="https://docs.openclaw.ai/gateway/remote">→ Remote</a></div></div>
+  <div class="deploy-grid reveal">
+    <div class="deploy-card"><div class="dc-tag" style="color:var(--green)">Local Dev</div><h4>pnpm dev</h4><p>Developer machine<br>~/.openclaw/<br>Loopback</p></div>
+    <div class="deploy-card"><div class="dc-tag" style="color:var(--blue)">macOS Prod</div><h4>LaunchAgent</h4><p>macOS App<br>~/.openclaw/<br>Loopback + Tailscale</p></div>
+    <div class="deploy-card"><div class="dc-tag" style="color:var(--purple)">Linux / VM</div><h4>systemd</h4><p>VPS/VM<br>~/.openclaw/<br>SSH tunnel</p></div>
+    <div class="deploy-card"><div class="dc-tag" style="color:var(--amber)">Cloud</div><h4>Fly.io</h4><p>Docker container<br>Persistent volume<br>HTTPS ingress</p></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- OPS TIMELINE -->
+<section id="ops">
+  <div class="reveal"><h2 class="st">A Day in the Life</h2><p class="sd">Architecture is abstraction. Here's what it looks like running.</p></div>
+  <div class="tline reveal">
+    <div class="te"><div class="td"><div class="tdi"></div></div><div class="tt">07:00</div><h4>Morning Briefing</h4><p>Cron fires. prompt-builder.ts loads SOUL + USER + memory search results. Weather, inbox, calendar skills. Summary to WhatsApp via auto-reply.ts.</p><div class="tags"><span class="tag r">Read ×3</span><span class="tag s">Cron</span></div></div>
+    <div class="te"><div class="td"><div class="tdi"></div></div><div class="tt">08:30</div><h4>Voice Wake</h4><p>"Hey Molty, first meeting?" Wake word triggers on macOS node. PiEmbeddedRunner fetches calendar, responds via ElevenLabs TTS.</p><div class="tags"><span class="tag r">Read</span><span class="tag s">Voice</span></div></div>
+    <div class="te"><div class="td"><div class="tdi"></div></div><div class="tt">09:15</div><h4>Inbox → Email Reply</h4><p>Meeting request found. Agent drafts reply. Tool policy allows email send (exec security="full", ask="off" in personal mode). Email sends. If ask="always" were configured, owner would see a prompt first.</p><div class="tags"><span class="tag r">Read</span><span class="tag w">Write</span><span class="tag s">Exec</span></div></div>
+    <div class="te"><div class="td"><div class="tdi"></div></div><div class="tt">11:00</div><h4>Unknown DM</h4><p>WhatsApp message from unknown. dmPolicy="pairing" kicks in. Code issued. Ignored until openclaw pairing approve.</p><div class="tags"><span class="tag gt">Pairing</span><span class="tag s">Security</span></div></div>
+    <div class="te"><div class="td"><div class="tdi"></div></div><div class="tt">14:00</div><h4>Browser Research</h4><p>"Analyse competitor pricing." Browser tool launches managed Chromium via CDP. Snapshots, extracts. All Read.</p><div class="tags"><span class="tag r">Read</span><span class="tag s">Browser</span></div></div>
+    <div class="te"><div class="td"><div class="tdi"></div></div><div class="tt">16:00</div><h4>Agent-to-Agent</h4><p>Research session uses sessions_send. Main session synthesises. Canvas push via A2UI.</p><div class="tags"><span class="tag s">sessions_send</span><span class="tag s">Canvas</span></div></div>
+    <div class="te"><div class="td"><div class="tdi"></div></div><div class="tt">22:00</div><h4>Memory Consolidation</h4><p>Cron reviews. memory-core indexes new facts into SQLite. Session pruning compacts context. Tomorrow's prompt-builder has today.</p><div class="tags"><span class="tag s">Cron</span><span class="tag s">SQLite</span></div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CONTROL PLANE -->
+<section id="control">
+  <div class="reveal"><h2 class="st">Control Plane</h2><p class="sd">An agent you cannot observe is one you cannot trust.</p>
+  <div class="doc-links"><a class="doc-link" href="https://docs.openclaw.ai/web">→ Web UI</a><a class="doc-link" href="https://docs.openclaw.ai/gateway/health">→ Health</a><a class="doc-link" href="https://docs.openclaw.ai/logging">→ Logging</a><a class="doc-link" href="https://docs.openclaw.ai/concepts/usage-tracking">→ Usage</a></div></div>
+  <div class="fg reveal" id="ctrlCards"></div>
+</section>
+
+<!-- TECH STACK -->
+<section>
+  <div class="reveal"><h2 class="st">Key Technologies</h2><p class="sd">The stack under the hood.</p></div>
+  <div class="reveal" style="display:flex;flex-wrap:wrap;gap:.35rem">
+    <span class="pill">Node.js 24 / 22.16+</span><span class="pill pp">@mariozechner/pi-agent-core</span><span class="pill pb">Commander.js CLI</span><span class="pill pg">ws WebSocket</span><span class="pill pa">Lit Web Components</span><span class="pill">SQLite (memory)</span><span class="pill pr">Docker (sandbox)</span><span class="pill">TypeBox + Zod</span><span class="pill pt">JSON5 config</span><span class="pill pk">jiti (plugin loader)</span><span class="pill">Swift (macOS/iOS)</span><span class="pill">Kotlin (Android)</span>
+  </div>
+</section>
+
+<footer>
+  <div class="fl">Open<span>Claw</span> Unpacked</div>
+  <p>A visual guide to autonomous personal agent architecture.</p>
+  <div class="flinks"><a href="https://github.com/openclaw/openclaw">GitHub</a><a href="https://clawhub.com">ClawHub</a><a href="https://docs.openclaw.ai">Docs</a><a href="https://deepwiki.com/openclaw/openclaw">DeepWiki</a><a href="https://discord.gg/clawd">Discord</a><a href="https://openclaw.ai">Website</a></div>
+</footer>
+
+<script>
+function svg(d,c){return `<svg class="ic ${c||''}" viewBox="0 0 24 24">${d}</svg>`}
+const I={
+  clock:svg('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'),
+  clipboard:svg('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M8 2h8v4H8z"/>'),
+  cpu:svg('<path d="M4 4h16v16H4z" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>'),
+  wrench:svg('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),
+  shield:svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'),
+  send:svg('<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>'),
+  database:svg('<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>'),
+  reply:svg('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'),
+  globe:svg('<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'),
+  dna:svg('<path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.8-2 2.5-4 2.8-6"/><path d="M15 2c-1.8 2-2.5 4-2.8 6"/>'),
+  msg:svg('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'),
+  phone:svg('<path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M12 18h.01"/>'),
+  monitor:svg('<path d="M2 3h20v14H2z" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>'),
+  palette:svg('<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'),
+  file:svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>'),
+  pkg:svg('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/>'),
+  mic:svg('<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v4"/><path d="M8 23h8"/>'),
+  link:svg('<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'),
+  activity:svg('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'),
+  userplus:svg('<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/>'),
+  shieldcheck:svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>'),
+  filelines:svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/>'),
+  plug:svg('<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a6 6 0 0 1-12 0V8z"/>'),
+  search:svg('<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>'),
+  pointer:svg('<path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>'),
+  settings:svg('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>')
+};
+
+// Loop
+const loopN=[
+  {ic:'clock',l:'Trigger',s:'Cron · message · webhook · Gmail',c:'var(--accent)'},
+  {ic:'reply',l:'Auto-Reply',s:'reply.ts · routing · ACL',c:'var(--green)'},
+  {ic:'clipboard',l:'Context',s:'prompt-builder.ts · memory',c:'var(--blue)'},
+  {ic:'cpu',l:'PiEmbeddedRunner',s:'pi-agent-core · streaming',c:'var(--purple)'},
+  {ic:'wrench',l:'Skill Call',s:'50+ tools · sandbox.ts',c:'var(--teal)'},
+  {ic:'shield',l:'Tool Policy',s:'profiles · exec · sandbox',c:'var(--amber)'},
+  {ic:'send',l:'Response',s:'Channel routing · media',c:'var(--green)'},
+  {ic:'database',l:'Memory',s:'SQLite index · prune',c:'var(--red)'}
+];
+const lr=document.getElementById('loopRow');
+loopN.forEach((n,i)=>{const d=document.createElement('div');d.className='lnd';d.onclick=()=>ld(i);d.innerHTML=`<div class="lc" style="border-color:color-mix(in srgb,${n.c} 40%,transparent);color:${n.c}">${I[n.ic].replace('class="ic"','class="ic ic-lg"')}</div><div class="lnl">${n.l}</div><div class="lns">${n.s}</div>`;lr.appendChild(d)});
+
+const LD=[
+  {t:'Trigger',d:'Four trigger types: cron jobs, inbound messages via 24+ channels, webhook payloads, and Gmail Pub/Sub. Each wakes the Pi agent runtime.',src:'src/commands/, src/gateway/server.ts'},
+  {t:'Auto-Reply Router',d:'The unified routing hub. src/auto-reply/reply.ts handles access control (allowlists, pairing, DM policies), resolves session keys via resolveSessionKey(), and dispatches to the agent runtime. Every inbound message flows through this layer before reaching the agent.',src:'src/auto-reply/reply.ts, src/config/sessions.ts'},
+  {t:'Context Compile',d:'prompt-builder.ts assembles the LLM prompt. Always loads SOUL.md. Injects USER.md, AGENTS.md, TOOLS.md as relevant. Queries src/memory/ (SQLite-backed search) for matching facts. Only relevant context injected — never the full history.',src:'src/agents/prompt-builder.ts, src/memory/'},
+  {t:'PiEmbeddedRunner',d:'The agent runtime powered by @mariozechner/pi-agent-core. Operates as an async generator with tool streaming and block streaming. Determines skills to invoke, classifies Read vs Write. Model failover via OAuth + API key rotation.',src:'src/agents/piembeddedrunner.ts'},
+  {t:'Skill Call',d:'50+ tools: bash, read/write/edit, browser (CDP Chromium), canvas (A2UI), node commands, sessions_* (agent coordination), cron, webhooks. Non-main sessions sandboxed via Docker (sandbox.ts). ClawHub for discovery.',src:'src/agents/sandbox.ts, skills/'},
+  {t:'Tool Policy',d:'Tool profiles restrict what categories are available (messaging, minimal, full). Exec security levels control shell access (security="full" allows, "deny" blocks). Ask mode can prompt before execution (ask="always") or run silently (ask="off" — the default for personal setups). Non-main sessions run in Docker sandbox with restricted tool allow/deny lists.',src:'src/agents/sandbox.ts, src/config/'},
+  {t:'Response',d:'Results formatted and routed to originating channel via auto-reply.ts. 24+ surfaces. Streaming + chunking per channel. Presence + typing indicators. Media pipeline.',src:'src/auto-reply/reply.ts'},
+  {t:'Memory Write',d:'memory-core plugin indexes new facts into SQLite. Session pruning compacts context. Usage tracked. State persisted (thinkingLevel, model, sendPolicy). Next iteration has full history.',src:'extensions/memory-core/, src/memory/'}
+];
+const LIK=['clock','reply','clipboard','cpu','wrench','shield','send','database'];
+function ld(i){const d=LD[i],e=document.getElementById('ldp');e.classList.add('vis');e.style.display='flex';document.getElementById('ldi').innerHTML=I[LIK[i]];document.getElementById('ldt').textContent=d.t;document.getElementById('ldd').textContent=d.d;document.getElementById('lds').innerHTML='<span>Source:</span> '+d.src.split(', ').map(s=>`<span>${s}</span>`).join(' · ')}
+
+const AIK={gw:'globe',id:'dna',ch:'msg',sk:'wrench',sf:'shield',nd:'phone',cv:'palette',soul:'file',cfg:'settings',pl:'plug',mem:'database',hub:'pkg',vw:'mic',ts:'link'};
+const ADD={
+  gw:{t:'Gateway',ty:'Core · WS Control Plane',d:'src/gateway/server.ts. Single WS at ws://127.0.0.1:18789. Orchestrates sessions, channels, tools, events, cron, webhooks. Serves Lit-based Control UI + WebChat. Localhost with Tailscale for remote.',src:'src/gateway/server.ts'},
+  id:{t:'Identity Engine',ty:'Memory & Context',d:'Workspace at ~/.openclaw/workspace/. prompt-builder.ts assembles prompts from SOUL.md, USER.md, AGENTS.md, TOOLS.md + memory search results. Templates (BOOTSTRAP, IDENTITY) handle initialization.',src:'src/agents/prompt-builder.ts'},
+  ch:{t:'Channels (24+)',ty:'Interface',d:'Unified via auto-reply.ts. Core channels in src/ (WhatsApp, Telegram, Slack, Discord, Signal, BlueBubbles, IRC, WebChat). Plugin channels in extensions/ (Teams, Matrix, WeChat, Feishu, LINE, etc).',src:'src/auto-reply/reply.ts'},
+  sk:{t:'Skills + Tools',ty:'Tooling',d:'50+ built-in. Browser (CDP Chromium), Canvas (A2UI), nodes, sessions_*, cron, webhooks. Sandboxed via Docker for non-main. ClawHub at clawhub.com. Bundled + managed + workspace skills.',src:'skills/, src/agents/sandbox.ts'},
+  sf:{t:'Safety',ty:'Security',d:'Inbound: DM Pairing + allowlists + group mention gating. Tool Policy: profiles (messaging/minimal/full), allow/deny lists, exec security levels, ask mode. Sandbox: Docker per-session for non-main. Audit via openclaw security audit.',src:'src/gateway/security, src/agents/sandbox.ts'},
+  nd:{t:'Nodes',ty:'Devices',d:'macOS (Swift, menu bar, Voice Wake, PTT). iOS (Swift, Canvas, camera, Bonjour). Android (Kotlin, Chat/Voice, device commands). All via node.invoke over WS.',src:'apps/macos/, apps/ios/, apps/android/'},
+  cv:{t:'Canvas + A2UI',ty:'Visual',d:'Agent-driven rendering surface. Push, reset, eval, snapshot. A2UI host protocol over Gateway WS.',src:'src/canvas/'},
+  soul:{t:'SOUL.md',ty:'Identity · Immutable',d:'Core directives loaded every prompt. Constraints, boundaries, purpose. The one thing the agent never forgets.',src:'~/.openclaw/workspace/SOUL.md'},
+  cfg:{t:'Configuration',ty:'System',d:'JSON5 at ~/.openclaw/openclaw.json. Precedence: env vars > config file > defaults. TypeBox + Zod validation. Doctor auto-migrates schemas.',src:'src/config/config.ts, src/config/schema.ts'},
+  pl:{t:'Plugins',ty:'Extensions',d:'Plugin loader (src/plugins/loader.ts) scans extensions/ for openclaw.extensions in package.json. Four types: channel, tool, memory, provider. Loaded via jiti.',src:'src/plugins/loader.ts, extensions/'},
+  mem:{t:'Memory',ty:'SQLite · Index · Search',d:'NOT flat markdown. memory-core plugin provides SQLite-backed storage with indexing and search. prompt-builder queries src/memory/ to inject relevant context per task.',src:'extensions/memory-core/, src/memory/'},
+  hub:{t:'ClawHub',ty:'Registry',d:'Skill registry at clawhub.com. Auto-search and pull. Bundled, managed, workspace skill types.',src:'clawhub.com'},
+  vw:{t:'Voice',ty:'Wake + Talk',d:'Wake words macOS/iOS. Continuous voice Android. ElevenLabs TTS + system fallback. Transcription. PTT overlay.',src:'apps/'},
+  ts:{t:'Tailscale',ty:'Remote Access',d:'Serve: tailnet HTTPS. Funnel: public HTTPS (password). Gateway stays loopback. resetOnExit option.',src:'src/gateway/tailscale'}
+};
+function ad(k){const d=ADD[k],e=document.getElementById('adp');e.classList.add('vis');e.style.display='flex';document.getElementById('adi').innerHTML=I[AIK[k]];document.getElementById('adt').textContent=d.t;document.getElementById('adty').textContent=d.ty;document.getElementById('add').textContent=d.d;document.getElementById('ads').innerHTML='<span>Source:</span> '+d.src.split(', ').map(s=>`<span>${s}</span>`).join(' · ')}
+function cd(el,t,d,ty){document.querySelectorAll('#channels .pill.act').forEach(p=>p.classList.remove('act'));el.classList.add('act');const e=document.getElementById('cdp');e.classList.add('vis');e.style.display='flex';document.getElementById('cdi').innerHTML=I.msg;document.getElementById('cdt').textContent=t;document.getElementById('cdty').textContent=ty;document.getElementById('cdd').textContent=d}
+
+// Node cards
+const nodes=[
+  {c:'var(--blue)',tag:'macOS',ic:'monitor',t:'OpenClaw.app',d:'Menu bar control. Voice Wake + PTT. WebChat + debug. Remote via SSH. Swift.'},
+  {c:'var(--green)',tag:'iOS',ic:'phone',t:'iOS Node',d:'Canvas. Voice Wake + Talk. Camera + screen. Bonjour pairing. Swift.'},
+  {c:'var(--purple)',tag:'Android',ic:'phone',t:'Android Node',d:'Chat/Voice/Canvas. Camera + screen. Device commands. Kotlin.'},
+  {c:'var(--accent)',tag:'Gateway',ic:'globe',t:'Control UI + WebChat',d:'Lit web components at :18789. Tailscale Serve/Funnel. SSH tunnels.'},
+  {c:'var(--pink)',tag:'Canvas',ic:'palette',t:'A2UI Workspace',d:'Agent-driven rendering. Push/reset/eval/snapshot. macOS + iOS + Android.'},
+  {c:'var(--teal)',tag:'Voice',ic:'mic',t:'Wake + Talk',d:'Wake words macOS/iOS. Continuous voice Android. ElevenLabs + system TTS.'}
+];
+document.getElementById('nodeCards').innerHTML=nodes.map(n=>`<div class="fc" style="border-left-color:${n.c}"><div class="ft" style="color:${n.c}">${I[n.ic].replace('class="ic"','class="ic ic-sm"').replace('currentColor',n.c)} ${n.tag}</div><h4>${n.t}</h4><p>${n.d}</p></div>`).join('');
+
+// Control cards
+const ctrls=[
+  {c:'var(--accent)',tag:'Monitoring',ic:'activity',t:'Pulse',d:'Cron, usage, sessions, presence, typing, health.'},
+  {c:'var(--blue)',tag:'Agents',ic:'userplus',t:'Multi-Agent Routing',d:'Channels → isolated agents. Per-agent workspaces + models.'},
+  {c:'var(--amber)',tag:'Models',ic:'cpu',t:'Provider Routing',d:'LLM config. OAuth + API key rotation. Failover chains.'},
+  {c:'var(--green)',tag:'Workspace',ic:'file',t:'Identity Files',d:'SOUL · USER · AGENTS · TOOLS. Skills dir. Templates.'},
+  {c:'var(--purple)',tag:'Registry',ic:'pkg',t:'ClawHub',d:'clawhub.com. Auto-search. Bundled + managed + workspace.'},
+  {c:'var(--red)',tag:'Safety',ic:'shieldcheck',t:'Security',d:'DM policies, tool profiles, sandbox, exec security. openclaw security audit.'},
+  {c:'var(--teal)',tag:'Remote',ic:'link',t:'Tailscale + SSH',d:'Serve / Funnel. SSH tunnels. Loopback binding.'},
+  {c:'var(--pink)',tag:'Ops',ic:'filelines',t:'Doctor + Logs',d:'Migrations. Debug logs. Retry. Streaming config.'}
+];
+document.getElementById('ctrlCards').innerHTML=ctrls.map(n=>`<div class="fc" style="border-left-color:${n.c}"><div class="ft" style="color:${n.c}">${I[n.ic].replace('class="ic"','class="ic ic-sm"').replace('currentColor',n.c)} ${n.tag}</div><h4>${n.t}</h4><p>${n.d}</p></div>`).join('');
+
+// Init
+document.getElementById('ldi').innerHTML=I.pointer;
+document.getElementById('adi').innerHTML=I.search;
+document.getElementById('cdi').innerHTML=I.msg;
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('vis')})},{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+// Topology SVG — with system boundaries
+(function(){
+const W=960,H=700;
+let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
+
+const fm="font-family=\"'JetBrains Mono',monospace\"";
+const ff="font-family=\"'Geologica',sans-serif\"";
+
+// Colors
+const C={
+  a:'#cc3b2a',g:'#2d8f52',b:'#3570b0',p:'#7b56b0',am:'#b07030',t:'#2a8a7a',pk:'#b04080',r:'#8b3a3a',
+  t2:'#6b6560',t3:'#9e978e',bd:'#e2dfd8',bg:'#faf9f6',bg2:'#fff',bg3:'#f3f1ed'
+};
+
+function zone(x,y,w,h,label,color=C.t3){
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="none" stroke="${color}" stroke-width="1" stroke-dasharray="6 4" opacity="0.6"/>
+  <text x="${x+12}" y="${y+16}" ${fm} font-size="8" font-weight="600" fill="${color}" letter-spacing="1.5" opacity="0.8">${label}</text>`;
+}
+
+function box(x,y,w,h,color,title,sub,r=7){
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${C.bg2}" stroke="${color}" stroke-width="1.2"/>
+  <text x="${x+w/2}" y="${y+h/2-(sub?5:1)}" text-anchor="middle" ${ff} font-size="10" font-weight="600" fill="${color}">${title}</text>
+  ${sub?`<text x="${x+w/2}" y="${y+h/2+9}" text-anchor="middle" ${fm} font-size="7" fill="${C.t3}">${sub}</text>`:''}`;
+}
+
+function pill(x,y,w,color,label){
+  return `<rect x="${x}" y="${y}" width="${w}" height="26" rx="13" fill="${C.bg2}" stroke="${color}" stroke-width="1"/>
+  <text x="${x+w/2}" y="${y+16}" text-anchor="middle" ${fm} font-size="7.5" font-weight="500" fill="${color}">${label}</text>`;
+}
+
+function arr(d,color=C.bd){
+  return `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.2" marker-end="url(#a${color.replace('#','')})"/>`;
+}
+
+function darr(d,color=C.bd){
+  return `<path d="${d}" fill="none" stroke="${color}" stroke-width="1" stroke-dasharray="5 3"/>`;
+}
+
+// Arrow markers
+s+=`<defs>`;
+[C.a,C.g,C.b,C.p,C.am,C.t,C.r,C.bd].forEach(color=>{
+  s+=`<marker id="a${color.replace('#','')}" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="6" markerHeight="4.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="${color}"/></marker>`;
+});
+s+=`</defs>`;
+
+// ═══════════════════════════════════════
+// ZONE 1: EXTERNAL INBOUND (top)
+// ═══════════════════════════════════════
+s+=zone(12,8,936,72,'EXTERNAL · INBOUND CHANNELS & TRIGGERS');
+const chans=[
+  {l:'WhatsApp',c:C.g},{l:'Telegram',c:C.g},{l:'Slack',c:C.b},{l:'Discord',c:C.b},
+  {l:'Signal',c:C.g},{l:'Teams',c:C.am},{l:'iMessage',c:C.g},{l:'WebChat',c:C.p},
+  {l:'+ 16 more',c:C.t3},{l:'Cron',c:C.am},{l:'Webhooks',c:C.am},{l:'Gmail',c:C.am}
+];
+let cx=24;
+chans.forEach(ch=>{
+  const w=ch.l.length*6.5+20;
+  s+=pill(cx,40,w,ch.c,ch.l);
+  cx+=w+5;
+});
+
+// ═══════════════════════════════════════
+// ZONE 2: OPENCLAW GATEWAY (main)
+// ═══════════════════════════════════════
+s+=zone(12,96,710,460,'OPENCLAW GATEWAY · YOUR MACHINE · ws://127.0.0.1:18789',C.a);
+
+// -- Auto-Reply --
+s+=box(30,128,150,50,C.g,'auto-reply.ts','ACL · session resolve · dispatch');
+
+// -- DM Pairing (security input) --
+s+=box(30,196,150,42,C.r,'DM Pairing','dmPolicy · allowlist · code');
+
+// -- Config --
+s+=box(30,256,150,42,C.t2,'Configuration','JSON5 · env > config > defaults');
+
+// -- Plugins --
+s+=box(30,316,150,50,C.am,'Plugin Loader','loader.ts · jiti · extensions/');
+s+=`<text x="105" y="382" text-anchor="middle" ${fm} font-size="6.5" fill="${C.t3}">channel · tool · memory · provider</text>`;
+
+// -- Gateway Core --
+s+=`<rect x="210" y="118" width="180" height="200" rx="10" fill="${C.bg3}" stroke="${C.a}" stroke-width="1" opacity="0.8"/>`;
+s+=`<text x="300" y="138" text-anchor="middle" ${ff} font-size="12" font-weight="700" fill="${C.a}">Gateway Core</text>`;
+s+=`<text x="300" y="152" text-anchor="middle" ${fm} font-size="7" fill="${C.t3}">server.ts</text>`;
+s+=box(224,164,152,34,C.a,'Sessions','resolveSessionKey() · state');
+s+=box(224,206,152,34,C.a,'Cron + Events','triggers · webhooks · pubsub');
+s+=box(224,248,152,34,C.a,'Control UI','Lit components · WebChat');
+
+// -- Prompt Builder --
+s+=box(210,340,180,46,C.b,'prompt-builder.ts','SOUL · USER · AGENTS · TOOLS');
+
+// -- Memory --
+s+=box(210,404,180,46,C.am,'Memory (SQLite)','memory-core · index · search');
+
+// -- PiEmbeddedRunner --
+s+=`<rect x="420" y="118" width="172" height="200" rx="10" fill="${C.bg3}" stroke="${C.p}" stroke-width="1" opacity="0.8"/>`;
+s+=`<text x="506" y="138" text-anchor="middle" ${ff} font-size="11" font-weight="700" fill="${C.p}">PiEmbeddedRunner</text>`;
+s+=`<text x="506" y="152" text-anchor="middle" ${fm} font-size="7" fill="${C.t3}">pi-agent-core · async loop</text>`;
+s+=box(432,164,148,34,C.p,'Tool Streaming','request → skill → result');
+s+=box(432,206,148,34,C.p,'Block Streaming','chunks → channel routing');
+s+=box(432,248,68,34,C.am,'Exec Ask','always · off');
+s+=box(512,248,68,34,C.r,'Sandbox','Docker · deny');
+
+// -- Tools --
+s+=box(420,340,172,46,C.t,'Tools (50+)','bash · browser · canvas · sessions_*');
+
+// -- Docker Sandbox --
+s+=box(420,404,172,46,C.r,'Docker Sandbox','sandbox.ts · per-session isolation');
+s+=`<text x="506" y="464" text-anchor="middle" ${fm} font-size="6.5" fill="${C.t3}">non-main sessions only</text>`;
+
+// -- ClawHub --
+s+=box(620,340,90,42,C.p,'ClawHub','skill registry');
+// Arrow: tools → clawhub
+s+=darr('M 592 363 L 618 363',C.p);
+
+// Arrows inside gateway
+// channels → auto-reply
+s+=arr('M 105 80 L 105 126',C.g);
+// auto-reply → gateway core
+s+=arr('M 180 153 L 208 180',C.g);
+// auto-reply → DM pairing (check)
+s+=darr('M 105 178 L 105 194',C.r);
+// gateway → prompt builder
+s+=arr('M 300 318 L 300 338',C.b);
+// prompt builder → memory
+s+=arr('M 300 386 L 300 402',C.am);
+// gateway → agent
+s+=arr('M 392 218 L 418 218',C.p);
+// agent → tools
+s+=arr('M 506 318 L 506 338',C.t);
+// tools → sandbox (dashed)
+s+=darr('M 506 386 L 506 402',C.r);
+// prompt builder ← memory (bidirectional hint)
+s+=darr('M 310 402 L 310 388',C.am);
+
+// ═══════════════════════════════════════
+// ZONE 3: DEVICE NODES (right)
+// ═══════════════════════════════════════
+s+=zone(740,96,208,340,'DEVICE NODES · YOUR PHONE / MAC',C.t);
+
+s+=box(756,128,176,44,C.b,'macOS Node','Swift · menu bar · PTT · debug');
+s+=box(756,184,176,44,C.g,'iOS Node','Swift · Bonjour · camera · screen');
+s+=box(756,240,176,44,C.p,'Android Node','Kotlin · chat · voice · device cmds');
+
+s+=box(756,304,84,36,C.t,'Voice','Wake · TTS');
+s+=box(848,304,84,36,C.pk,'Canvas','A2UI · snap');
+s+=box(756,352,176,36,C.t,'Camera · Screen','snap · clip · record');
+
+// node.invoke arrow to gateway
+s+=arr('M 754 218 L 724 218',C.t);
+s+=`<text x="738" y="212" text-anchor="middle" ${fm} font-size="6" fill="${C.t}" transform="rotate(-90,738,212)">node.invoke</text>`;
+
+// ═══════════════════════════════════════
+// ZONE: EXTERNAL · LLM PROVIDERS
+// ═══════════════════════════════════════
+s+=zone(740,444,208,68,'EXTERNAL · MODEL PROVIDERS',C.p);
+s+=pill(756,462,58,C.p,'Claude');
+s+=pill(820,462,50,C.b,'GPT');
+s+=pill(876,462,66,C.am,'Gemini');
+s+=pill(756,492,70,C.t,'DeepSeek');
+s+=pill(832,492,52,C.t3,'Local');
+
+// Arrow: PiEmbeddedRunner → out of gateway → LLM providers (vertical line in the gap between zones)
+s+=`<path d="M 596 180 L 728 180 L 728 475 L 754 475" fill="none" stroke="${C.p}" stroke-width="1.2" marker-end="url(#a${C.p.replace('#','')})"/>`;
+s+=`<text x="724" y="330" text-anchor="end" ${fm} font-size="6.5" fill="${C.p}" dx="-3">API calls</text>`;
+
+// ── TAILSCALE (bridge between gateway, nodes, and external clients) ──
+s+=box(740,524,208,38,C.a,'Tailscale · Remote Access','Serve (tailnet) · Funnel (public) · SSH tunnels');
+// Arrow: gateway → tailscale
+s+=darr('M 722 544 L 738 544',C.a);
+// Arrow: tailscale ↔ device nodes (reaches up to nodes zone)
+s+=`<path d="M 920 524 L 920 436" fill="none" stroke="${C.a}" stroke-width="1" stroke-dasharray="5 3" marker-end="url(#a${C.a.replace('#','')})"/>`;
+s+=`<text x="924" y="480" ${fm} font-size="6" fill="${C.a}">remote</text>`;
+s+=`<text x="924" y="488" ${fm} font-size="6" fill="${C.a}">nodes</text>`;
+
+// ═══════════════════════════════════════
+// ZONE 4: EXTERNAL · REACHABLE STATE
+// ═══════════════════════════════════════
+s+=zone(12,572,936,118,'EXTERNAL · STATE REACHABLE VIA TOOLS (governed by tool policy + exec security)',C.am);
+
+s+=box(30,598,170,46,C.am,'Tool Policy Guard','profiles · allow/deny · exec ask');
+
+s+=pill(220,606,85,C.am,'APIs');
+s+=pill(312,606,85,C.am,'Email');
+s+=pill(404,606,95,C.am,'Calendar');
+s+=pill(506,606,75,C.am,'Web');
+s+=pill(588,606,110,C.am,'Databases');
+s+=pill(706,606,110,C.t,'File System');
+s+=pill(824,606,110,C.r,'Shell / Exec');
+
+s+=`<text x="560" y="668" text-anchor="middle" ${fm} font-size="7" fill="${C.t3}">Access governed by tool profiles, exec security levels (full/deny), ask mode (always/off), and sandbox isolation</text>`;
+
+// Arrow: tools → external state
+s+=arr('M 506 450 L 506 540 L 130 540 L 130 596',C.am);
+s+=`<text x="340" y="536" text-anchor="middle" ${fm} font-size="7" fill="${C.am}" letter-spacing="1">TOOL EXECUTION REACHES EXTERNAL STATE</text>`;
+
+// Arrow: tool policy → external services
+s+=arr('M 200 621 L 218 621',C.am);
+
+// Arrow: response back to channels (Read path)
+s+=darr('M 432 155 L 415 155 L 415 100 L 300 100 L 300 80',C.g);
+s+=`<text x="370" y="96" text-anchor="middle" ${fm} font-size="6.5" fill="${C.g}">Read results route back</text>`;
+
+s+=`</svg>`;
+document.getElementById('topoSvg').innerHTML=s;
+})();
+
+</script>
+</body>
+</html>
