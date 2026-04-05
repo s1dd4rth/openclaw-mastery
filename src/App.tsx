@@ -99,34 +99,6 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-openclaw-bg font-body overflow-hidden">
-      {/* Top Navigation Bar (Exact Mirror of Unpacked) */}
-      <nav className="fixed top-0 left-0 right-0 h-[48px] bg-openclaw-bg/92 backdrop-blur-[20px] border-b border-openclaw-border z-50 flex items-center px-[1.5rem] justify-between transition-all duration-300">
-        <div className="flex items-center gap-[1.5rem]">
-          <div className="font-sans font-extrabold text-[0.82rem] tracking-tighter text-openclaw-dark select-none">
-            Open<span className="text-openclaw-red">Claw</span>
-          </div>
-          
-          <div className="hidden lg:flex items-center gap-4">
-            {['Topology', 'Loop', 'Architecture', 'Channels', 'Plugins', 'Skills', 'Memory', 'Safety', 'Deploy'].map((link) => (
-              <span key={link} className="text-[0.65rem] font-bold text-openclaw-dark/30 uppercase tracking-widest cursor-default">
-                {link}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <a
-            href="https://s1dd4rth.github.io/openclaw-mastery/openclaw-unpacked.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[0.65rem] font-bold text-openclaw-dark/40 hover:text-openclaw-dark transition-all duration-200 uppercase tracking-tight flex items-center gap-1.5"
-          >
-            Architecture Guide <span className="opacity-40 text-[10px]">↗</span>
-          </a>
-        </div>
-      </nav>
-
       <Sidebar
         moduleDropdownOpen={moduleDropdownOpen}
         setModuleDropdownOpen={setModuleDropdownOpen}
@@ -139,7 +111,7 @@ export default function App() {
       />
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto pt-[48px] px-6 md:px-12 lg:px-20">
+      <main className="flex-1 overflow-y-auto px-6 md:px-12 lg:px-20">
         <div className="max-w-screen-xl mx-auto py-24">
           {/* Module Hero (Mirroring Unpacked) */}
           <header className="mb-24 flex flex-col items-center text-center relative">
