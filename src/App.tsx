@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { MODULES_DATA } from './data/modules';
 import { useStepProgress } from './hooks/useStepProgress';
+import { isPasteValidatorEnabled } from './data/featureFlags';
+import type { ApplyPlan } from './data/validator';
 import { Sidebar } from './components/layout/Sidebar';
 import { MobileGate } from './components/layout/MobileGate';
 import { StepEngine } from './components/steps/StepEngine';
@@ -65,6 +67,31 @@ export default function App() {
     };
 
     setVerifyResults(moduleId, phaseId, stepId, updatedResults);
+  };
+
+  // Apply a parsed validator output across whichever steps own each check
+  const handleApplyValidatorPlan = (plan: ApplyPlan) => {
+    const groups = new Map<
+      string,
+      { phaseId: string; stepId: string; items: ApplyPlan['applied'] }
+    >();
+    for (const a of plan.applied) {
+      const key = `${a.phaseId}::${a.stepId}`;
+      const existing = groups.get(key);
+      if (existing) {
+        existing.items.push(a);
+      } else {
+        groups.set(key, { phaseId: a.phaseId, stepId: a.stepId, items: [a] });
+      }
+    }
+    for (const { phaseId, stepId, items } of groups.values()) {
+      const existing = getStepState(nav.moduleId, phaseId, stepId)?.verifyResults ?? {};
+      const merged = { ...existing };
+      for (const a of items) {
+        merged[a.checkId] = a.result;
+      }
+      setVerifyResults(nav.moduleId, phaseId, stepId, merged);
+    }
   };
 
   // Toggle a check from the ValidationDashboard — find which step owns it
@@ -194,6 +221,10 @@ export default function App() {
             onMarkComplete={stepId => markStepComplete(nav.moduleId, nav.phaseId, stepId)}
             onSaveInput={saveUserInput}
             onNavigateStep={index => setNav({ stepIndex: index })}
+            module={currentModule}
+            moduleNumber={MODULES_DATA.findIndex(m => m.id === nav.moduleId) + 1}
+            pasteValidatorEnabled={isPasteValidatorEnabled(nav.moduleId)}
+            onApplyValidator={handleApplyValidatorPlan}
           />
         )}
         </div>

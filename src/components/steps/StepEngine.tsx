@@ -1,8 +1,11 @@
-import type { Step, VerifyResult } from '../../data/types';
+import type { Module, Step, VerifyResult } from '../../data/types';
+import type { ApplyPlan } from '../../data/validator';
 import { StepLearn } from './StepLearn';
 import { StepDo } from './StepDo';
 import { StepVerify } from './StepVerify';
 import { StepProgress } from './StepProgress';
+import { PasteValidatorOutput } from './PasteValidatorOutput';
+import { CompletionCodeBanner } from './CompletionCodeBanner';
 
 interface StepEngineProps {
   steps: Step[];
@@ -18,6 +21,10 @@ interface StepEngineProps {
   onMarkComplete: (stepId: string) => void;
   onSaveInput: (key: string, value: string) => void;
   onNavigateStep: (index: number) => void;
+  module: Module;
+  moduleNumber: number;
+  pasteValidatorEnabled: boolean;
+  onApplyValidator: (plan: ApplyPlan) => void;
 }
 
 export const StepEngine = ({
@@ -32,6 +39,10 @@ export const StepEngine = ({
   onMarkComplete,
   onSaveInput,
   onNavigateStep,
+  module,
+  moduleNumber,
+  pasteValidatorEnabled,
+  onApplyValidator,
 }: StepEngineProps) => {
   const completedSteps = steps.map(s => isStepComplete(s.id));
   const step = steps[currentIndex];
@@ -80,6 +91,20 @@ export const StepEngine = ({
               userInputs={userInputs}
               onExecute={prompt => onExecute(prompt, step.title)}
               onSaveInput={onSaveInput}
+            />
+          )}
+
+          {/* M10 completion code (Step 7): surfaces the validator-generated code prominently. */}
+          {module.id === 'm10' && (
+            <CompletionCodeBanner results={getVerifyResults(step.id)} />
+          )}
+
+          {/* Paste validator output (per design doc, above StepVerify, feature-flagged per module) */}
+          {step.verify && pasteValidatorEnabled && (
+            <PasteValidatorOutput
+              module={module}
+              moduleNumber={moduleNumber}
+              onApply={onApplyValidator}
             />
           )}
 

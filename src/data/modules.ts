@@ -695,16 +695,6 @@ const m5: Module = {
                     verify: {
                         checks: [
                             {
-                                id: 'doc-summary-inspected',
-                                label: 'document-summary was inspected before install',
-                                verifyPrompt:
-                                    'Ask the Claw: "Confirm you showed me document-summary\'s SKILL.md before installing." Respond with JSON: { "pass": true/false, "detail": "whether inspection happened" }',
-                                failHint:
-                                    'Ask it to explain document-summary in plain English: what it does, what should trigger it, and what it depends on.',
-                                fixPrompt:
-                                    'Tell the Claw: "Show me the SKILL.md for document-summary now before we proceed."',
-                            },
-                            {
                                 id: 'doc-summary-installed',
                                 label: 'document-summary was installed for this workspace',
                                 verifyPrompt:
@@ -859,16 +849,6 @@ const m6: Module = {
                     },
                     verify: {
                         checks: [
-                            {
-                                id: 'app-password-created',
-                                label: 'A personal Gmail App Password was created',
-                                verifyPrompt:
-                                    'Confirm you have a 16-digit Gmail App Password ready. Respond with JSON: { "pass": true/false, "detail": "whether you generated one" }',
-                                failHint:
-                                    'Check the official Google help page. The common blockers are missing 2-Step Verification, a work/school Google account, or Advanced Protection. Use a personal Gmail account.',
-                                fixPrompt:
-                                    'Go to myaccount.google.com → Security → App Passwords and generate a new password for OpenClaw.',
-                            },
                             {
                                 id: 'imap-installed',
                                 label: 'imap-smtp-email was installed from ClawHub for this workspace',
@@ -1055,16 +1035,6 @@ const m7: Module = {
                     verify: {
                         checks: [
                             {
-                                id: 'brave-key-created',
-                                label: 'You created a Brave Search API key',
-                                verifyPrompt:
-                                    'Confirm you have a Brave Search API key. Respond with JSON: { "pass": true/false, "detail": "whether the key was created" }',
-                                failHint:
-                                    'Visit search.brave.com/api to create a free API key.',
-                                fixPrompt:
-                                    'Tell the Claw: "Walk me through getting a Brave Search API key from search.brave.com/api."',
-                            },
-                            {
                                 id: 'brave-configured',
                                 label: 'The built-in web_search tool is configured to use provider brave',
                                 verifyPrompt:
@@ -1200,16 +1170,6 @@ const m8: Module = {
                     verify: {
                         checks: [
                             {
-                                id: 'smtp-inspected',
-                                label: 'imap-smtp-email was inspected for the send workflow before any changes',
-                                verifyPrompt:
-                                    'Ask the Claw: "Confirm you showed me the send workflow before adding SMTP settings." Respond with JSON: { "pass": true/false, "detail": "whether inspection happened first" }',
-                                failHint:
-                                    'Tell it that Module 8 is compose-only. Reply and forward are out of scope.',
-                                fixPrompt:
-                                    'Tell the Claw: "Show me the imap-smtp-email send workflow documentation before we add SMTP credentials."',
-                            },
-                            {
                                 id: 'smtp-configured',
                                 label: 'Gmail SMTP settings were added to ~/.config/imap-smtp-email/.env',
                                 verifyPrompt:
@@ -1263,13 +1223,23 @@ const m8: Module = {
                         checks: [
                             {
                                 id: 'follow-up-exists',
-                                label: 'follow-up-email workspace skill created',
+                                label: 'follow-up-email workspace skill exists',
                                 verifyPrompt:
-                                    'Ask the Claw: "Show me the follow-up-email skill." Respond with JSON: { "pass": true/false, "detail": "whether it exists and includes an approval step" }',
+                                    'Confirm the follow-up-email SKILL.md exists in the workspace skills directory. Respond ONLY with this JSON: {"checks":[{"id":"follow-up-exists","pass":true,"detail":"SKILL.md present"}]} — set pass to false if missing.',
                                 failHint:
-                                    'The draft may send without showing you the full email first. Check AGENTS.md approval requirements.',
+                                    'The skill file may not have saved. Ask the Claw to show the workspace skills directory.',
                                 fixPrompt:
-                                    'Tell the Claw: "Create the follow-up-email skill with a mandatory approval gate before sending."',
+                                    'Tell the Claw: "Create the follow-up-email skill in the workspace skills folder now."',
+                            },
+                            {
+                                id: 'follow-up-approval-step',
+                                label: 'follow-up-email skill documents an approval step before sending',
+                                verifyPrompt:
+                                    'Ask the Claw: "Show me the follow-up-email SKILL.md. Does it include an explicit approval gate before sending?" Respond with JSON: { "pass": true/false, "detail": "what the approval flow says" }',
+                                failHint:
+                                    'The draft may send without showing you the full email first. The skill should require explicit approval before calling send.',
+                                fixPrompt:
+                                    'Tell the Claw: "Update the follow-up-email skill to require an explicit approval gate before sending."',
                             },
                         ],
                     },
@@ -1297,11 +1267,11 @@ const m8: Module = {
                                 id: 'test-email-sent',
                                 label: 'Test email sent to yourself and received',
                                 verifyPrompt:
-                                    'Check your inbox for the test email. Respond with JSON: { "pass": true/false, "detail": "whether you received it" }',
+                                    'Use imap-smtp-email to scan the Gmail Sent folder for a self-addressed test email in the last 24 hours. Respond ONLY with this JSON: {"checks":[{"id":"test-email-sent","pass":true,"detail":"Found test email in Sent folder, dated [timestamp]"}]} — set pass to false if nothing matching is found.',
                                 failHint:
-                                    'Check spam first. If it is not there, ask the Claw to verify SMTP_FROM matches your Gmail address.',
+                                    'No matching message in the Sent folder. Confirm SMTP_FROM matches your Gmail address, then send a fresh test and re-run.',
                                 fixPrompt:
-                                    'Tell the Claw: "Verify SMTP_FROM in the config matches my Gmail address, then send a test email again."',
+                                    'Tell the Claw: "Verify SMTP_FROM in the config matches my Gmail address, then send a test email to myself and confirm it appears in the Sent folder."',
                             },
                             {
                                 id: 'approval-gate-works',
@@ -1402,10 +1372,20 @@ const m9: Module = {
                                     'Tell the Claw: "Create the writer agent workspace now with a capable model and full identity files."',
                             },
                             {
-                                id: 'writer-soul',
-                                label: 'The writer workspace has a detailed SOUL.md tuned for long-form writing',
+                                id: 'writer-soul-exists',
+                                label: 'The writer workspace has a SOUL.md',
                                 verifyPrompt:
-                                    'Ask your Claw: "Show me the writer agent\'s SOUL.md voice section." Respond with JSON: { "pass": true/false, "detail": "whether it has specific writing voice guidance" }',
+                                    'Confirm the writer agent workspace contains a SOUL.md file. Respond ONLY with this JSON: {"checks":[{"id":"writer-soul-exists","pass":true,"detail":"writer/SOUL.md present"}]} — set pass to false if missing.',
+                                failHint:
+                                    'The writer workspace may not have a SOUL.md yet. Ask the Claw to create one.',
+                                fixPrompt:
+                                    'Tell the Claw: "Create SOUL.md in the writer workspace with at least an Identity and Voice section."',
+                            },
+                            {
+                                id: 'writer-soul-voice-quality',
+                                label: 'The writer SOUL.md voice section is detailed and specific',
+                                verifyPrompt:
+                                    'Ask your Claw: "Show me the writer SOUL.md voice section. Is it specific enough to drive long-form writing style?" Respond with JSON: { "pass": true/false, "detail": "what guidance the voice section contains" }',
                                 failHint:
                                     'Ask the Claw to show you the writer SOUL.md and tighten the voice section. Small changes there have a large effect on output.',
                                 fixPrompt:
@@ -1544,11 +1524,10 @@ const m10: Module = {
                     id: 'course-verification',
                     title: 'Run Course Assessment',
                     learn:
-                        'The course assessment asks your Claw to review everything you built across all ten modules and produce a day-by-day completion report. This is a self-audit: it reads your actual files, checks your actual configuration, and tells you honestly what is complete and what might need revisiting. The optional completion code summarizes the result in a compact format you can share.',
+                        'Module 10 wraps the course with a system-wide self-audit, run by the openclaw-mastery validator skill you installed at the start. The validator walks every prior module\'s checks, builds a per-module pass/fail report, and generates a deterministic completion code from the result. Paste the JSON output into the panel below and the code appears in the green banner above. Copy the code into the last question of the Google Form.\n\nThe code is reproducible — anyone with the same OpenClaw setup state generates the same code. That is what makes it a meaningful completion proof rather than a free-text attestation.',
                     do: {
                         prompt:
-                            'Read https://raw.githubusercontent.com/aishwaryanr/awesome-generative-ai-guide/main/free_courses/openclaw_mastery_for_everyone/days/day-10-what-comes-next/claw-instructions-run-course-verification.md and follow every step. Review my setup across the course, tell me which days look complete, generate the optional completion code, and stop when the report is complete.',
-                        instructionUrl: `${INSTRUCTION_BASE}day-10-what-comes-next/claw-instructions-run-course-verification.md`,
+                            'Use openclaw-mastery to verify module 10. The validator orchestrates verify_module(1) through verify_module(9), aggregates the per-module results, and returns a deterministic completion code in the JSON output. Paste the full JSON output into the "Paste validator output" panel below — the dashboard updates and the completion code appears in the green banner above the verify section.',
                     },
                     verify: {
                         checks: [
@@ -1556,41 +1535,41 @@ const m10: Module = {
                                 id: 'assessment-opened',
                                 label: 'You opened the assessment form',
                                 verifyPrompt:
-                                    'Confirm you opened the Google Form assessment. Respond with JSON: { "pass": true/false, "detail": "whether you opened it" }',
+                                    'Manual: confirm you opened the Google Form assessment.',
                                 failHint:
-                                    'The link to the assessment form is in the day10-course-verification.md instruction file.',
+                                    'The Google Form link is included in the validator\'s output, or in the original Day 10 instruction file. Open it in a new tab before submitting.',
                                 fixPrompt:
-                                    'Ask your Claw to show you the link to the Module 10 assessment form.',
+                                    'Open the Module 10 Google Form assessment in a new tab.',
                             },
                             {
                                 id: 'claw-reviewed-setup',
-                                label: 'Your Claw reviewed the setup across the course',
+                                label: 'Course-wide review completed by validator',
                                 verifyPrompt:
-                                    'Ask the Claw to run the course review now if it has not already. Respond with JSON: { "pass": true/false, "detail": "whether it produced a report" }',
+                                    'The openclaw-mastery validator orchestrates verify_module(1..9) as part of verify_module(10). This check passes automatically when the validator returns successfully. No manual review needed.',
                                 failHint:
-                                    'Ask it to explain exactly what it checked for each module. Module 10 should judge the visible setup, not whether you remember doing the step.',
+                                    'If the validator returned an error or partial results, install or upgrade openclaw-mastery and re-run verify_module 10. If recursive self-invocation is unsupported on your OpenClaw, run verify_module(1) through (9) in sequence first, then verify_module(10).',
                                 fixPrompt:
-                                    'Tell the Claw: "Review my entire OpenClaw setup module by module and tell me what is complete."',
+                                    'Re-run: Use openclaw-mastery to verify module 10. Paste the new JSON into the panel below.',
                             },
                             {
                                 id: 'completion-report',
-                                label: 'You got a day-by-day completion report',
+                                label: 'Per-module pass/fail report generated',
                                 verifyPrompt:
-                                    'Confirm you received a report covering all 10 modules. Respond with JSON: { "pass": true/false, "detail": "how many modules it covered" }',
+                                    'The validator returns a per-module pass/fail breakdown inside evidence.report. This check passes automatically when the report is fully formed (data for all 9 prior modules present).',
                                 failHint:
-                                    'Ask the Claw to repeat the score and show the module-by-module pass or fail list again.',
+                                    'Report missing data for one or more modules. Re-run the validator after fixing any earlier-module issues it surfaced.',
                                 fixPrompt:
-                                    'Tell the Claw: "Show me the full module-by-module completion report again."',
+                                    'Re-run: Use openclaw-mastery to verify module 10.',
                             },
                             {
                                 id: 'completion-code',
-                                label: 'You got an optional completion code from your Claw',
+                                label: 'Completion code generated by validator',
                                 verifyPrompt:
-                                    'Ask the Claw for the completion code if you did not get one. Respond with JSON: { "pass": true/false, "detail": "the code or whether you got one" }',
+                                    'The validator generates the completion code as a sha256-derived hash of the per-module pass tuple and surfaces it in the green banner above. This check passes automatically when the code is present in the validator\'s response (evidence.code).',
                                 failHint:
-                                    'Ask the Claw to repeat the score and show the day-by-day pass or fail list again. The code should match that score.',
+                                    'No code in the validator response — the orchestration likely failed at an earlier stage. Check that all prior-module verifications ran without errors before re-running module 10.',
                                 fixPrompt:
-                                    'Tell the Claw: "Generate the completion code based on the course review results."',
+                                    'Re-run: Use openclaw-mastery to verify module 10. The code reappears in the banner.',
                             },
                         ],
                     },

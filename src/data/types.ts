@@ -46,6 +46,8 @@ export interface VerifyResult {
   pass: boolean;
   detail: string;
   checkedAt: string;
+  /** Optional opaque evidence from the validator (e.g. M10's completion code). Not all checks set this. */
+  evidence?: unknown;
 }
 
 export interface StepState {
