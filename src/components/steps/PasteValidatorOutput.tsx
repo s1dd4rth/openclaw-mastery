@@ -384,7 +384,7 @@ function renderFeedback(f: Exclude<FeedbackState, { kind: 'idle' }>) {
             <div className="text-xs text-red-900 font-medium leading-relaxed">
               <strong>The openclaw-mastery skill is not installed.</strong> Install it first, then re-run verify:
               <pre className="bg-openclaw-dark text-emerald-200 px-3 py-2 rounded mt-2 font-mono text-[11px] overflow-x-auto">
-openclaw skills install https://github.com/&lt;owner&gt;/openclaw-mastery-validator
+openclaw skills install https://github.com/s1dd4rth/openclaw-mastery-skill
               </pre>
             </div>
           </div>

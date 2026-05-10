@@ -98,6 +98,30 @@ const m1: Module = {
                     },
                 },
                 {
+                    id: 'install-validator',
+                    title: 'Install the Course Validator Skill',
+                    learn:
+                        'The course uses a companion OpenClaw skill called `openclaw-mastery` to verify your setup at the end of each module. Instead of you ticking checkboxes by hand, the skill inspects your actual OpenClaw state — config values, files, cron jobs, channels — and returns a structured pass/fail report this app reads.\n\nIt\'s read-only. It never modifies your setup, never displays secrets, and never sends messages. Source: [github.com/s1dd4rth/openclaw-mastery-skill](https://github.com/s1dd4rth/openclaw-mastery-skill) (MIT, ~50 checks across 10 modules).\n\n**Install:** copy the prompt below into your Claw chat. Your Claw will fetch the skill and register it for this workspace.\n\n**Note (alpha):** the validator is currently `v0.1.0-alpha.1`. The skill structure is complete but a few CLI assumptions are unverified against the live OpenClaw CLI. If a check seems wrong, fall back to manual toggle — it\'s a known limitation, not a course bug.',
+                    do: {
+                        prompt:
+                            'Please install the openclaw-mastery skill from https://github.com/s1dd4rth/openclaw-mastery-skill into this workspace. After install, list installed skills and confirm openclaw-mastery appears.',
+                    },
+                    verify: {
+                        checks: [
+                            {
+                                id: 'validator-installed',
+                                label: 'openclaw-mastery skill is installed for this workspace',
+                                verifyPrompt:
+                                    'List installed skills for this workspace. Respond ONLY with this JSON: {"checks":[{"id":"validator-installed","pass":true,"detail":"openclaw-mastery v0.1.0-alpha.1 installed"}]} — set pass to false if openclaw-mastery is missing.',
+                                failHint:
+                                    'The skill may not have installed. Confirm OpenClaw\'s `skills install` accepts a GitHub URL — if not, follow the README install instructions on the repo page.',
+                                fixPrompt:
+                                    'Tell the Claw: "Install the openclaw-mastery skill from https://github.com/s1dd4rth/openclaw-mastery-skill and confirm it appears in skills list."',
+                            },
+                        ],
+                    },
+                },
+                {
                     id: 'tour-configuration',
                     title: 'Tour Your Configuration (optional, for learners)',
                     learn:

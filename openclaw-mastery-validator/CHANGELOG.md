@@ -6,7 +6,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 `schema_version` in the JSON contract is bumped independently of the package `version`. A breaking schema change is a major version bump for both.
 
-## [Unreleased]
+## [0.1.0-alpha.1] - 2026-05-10
+
+**Pre-release. CLI assumptions not yet verified against a live OpenClaw — treat as alpha.**
 
 ### Added
 - Initial validator skill scaffold (`SKILL.md`, README, MIT license).
@@ -18,7 +20,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Example response (`examples/m1-response.json`).
 - CLI assumptions doc (`docs/cli-assumptions.md`) — the original 7 M1 assumptions plus the M2–M10 expansion (channels list, cron list, skills list, agents list, agent-comms config, workspace path conventions, `jq` availability, skill-from-skill invocation).
 
-### Pending before v0.1.0 tag
+### Pending before v0.1.0 (stable) tag
 
 - Verify all CLI assumptions in `docs/cli-assumptions.md` on a fresh Hostinger template (Linux) AND a fresh Mac mini install (macOS).
 - Install the skill into both environments and run `verify_module 1` through `verify_module 10`. Compare output to `examples/m1-response.json` shape; M2–M10 examples to be added during verification.
