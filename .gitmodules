@@ -1,3 +1,6 @@
 [submodule "openclaw-mastery-validator"]
 	path = openclaw-mastery-validator
 	url = https://github.com/s1dd4rth/openclaw-mastery-skill
+[submodule "course-source"]
+	path = course-source
+	url = https://github.com/aishwaryanr/awesome-generative-ai-guide.git
