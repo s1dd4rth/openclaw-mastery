@@ -119,8 +119,11 @@ export const StepEngine = ({
             />
           )}
 
-          {/* Mark as done button for learn-only steps (no do/verify) */}
-          {!step.do && !step.verify && !completedSteps[currentIndex] && (
+          {/* Mark as done button for steps without a verify section.
+              Steps with `verify` advance via passing checks (or skipping).
+              Steps without `verify` need a manual completion control —
+              both pure-learn steps AND learn+do steps like Tour Configuration. */}
+          {!step.verify && !completedSteps[currentIndex] && (
             <button
               onClick={() => onMarkComplete(step.id)}
               className="w-full py-4 bg-openclaw-red text-white rounded-xl font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-openclaw-red/20"
