@@ -57,6 +57,7 @@ export const StepEngine = ({
         totalSteps={steps.length}
         currentIndex={currentIndex}
         completedSteps={completedSteps}
+        onNavigateStep={onNavigateStep}
       />
 
       {isLocked ? (
