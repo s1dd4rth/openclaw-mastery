@@ -383,10 +383,11 @@ function renderFeedback(f: Exclude<FeedbackState, { kind: 'idle' }>) {
           <div className="flex items-start gap-2">
             <Download size={16} className="text-openclaw-red mt-0.5 flex-shrink-0" />
             <div className="text-xs text-red-900 font-medium leading-relaxed">
-              <strong>The openclaw-mastery skill is not installed.</strong> Install it first, then re-run verify:
+              <strong>The openclaw-mastery skill is not installed.</strong> Until the skill is published to ClawHub, clone it into your workspace skills directory (replace <code className="bg-red-100 px-1 rounded">&lt;agent&gt;</code> with your agent dir name from <code className="bg-red-100 px-1 rounded">ls ~/.openclaw/workspaces/</code>):
               <CodeBlock className="bg-openclaw-dark text-emerald-200 px-3 py-2 rounded mt-2 font-mono text-[11px] overflow-x-auto">
-                openclaw skills install https://github.com/s1dd4rth/openclaw-mastery-skill
+                git clone https://github.com/s1dd4rth/openclaw-mastery-skill ~/.openclaw/workspaces/&lt;agent&gt;/skills/openclaw-mastery
               </CodeBlock>
+              <span className="block mt-2">Then start a fresh OpenClaw session and re-run verify. Full instructions: M1 → "Install the Course Validator Skill".</span>
             </div>
           </div>
         </div>
