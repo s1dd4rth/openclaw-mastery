@@ -78,28 +78,6 @@ const m1: Module = {
                         'OpenClaw needs a host machine that stays on. Pick one of two paths — from Day 2 onward the rest of the course is identical regardless of which you choose.\n\n### Path A — Hostinger VPS (cloud, ~$5–10/mo, recommended for most)\n\nA managed cloud VPS with Hostinger\'s one-click OpenClaw template. Public URL out of the box, runs 24/7, every channel works without extra setup.\n\n1. Go to [Hostinger OpenClaw setup](https://levelup-labs.ai/HOSTINGER-OPENCLAW) and create an account\n2. Watch the setup video: [youtu.be/JXWmkPCcF7E](https://youtu.be/JXWmkPCcF7E)\n3. Choose a VPS plan and select the OpenClaw template\n4. Paste your API key (from the previous step) when the setup wizard asks\n5. Wait 1–3 minutes for the VPS to deploy. You\'ll see a web chat URL when it\'s done.\n\n### Path B — Mac mini (your hardware, no monthly fee)\n\nRun OpenClaw on a Mac mini you already own. No monthly cost; you trade that for two reliability caveats covered below.\n\n1. Install OpenClaw via the canonical installer script (requires Node 22.16+, Node 24 recommended):\n   ```\n   curl -fsSL https://openclaw.ai/install.sh | bash\n   ```\n   Full install docs at [docs.openclaw.ai/install](https://docs.openclaw.ai/install) — covers npm/pnpm/bun, Docker, and managed-host options if you prefer one of those over the script.\n2. Run `openclaw onboard` in a terminal and paste your API key when prompted. For background auto-start (recommended on a Mac mini that lives on your desk), add `--install-daemon` to register a LaunchAgent that restarts the gateway on login.\n3. Open `http://localhost:18789` in a browser. The web chat appears when the gateway is ready.\n\n**Two known limitations on the Mac mini path** (covered when you reach them):\n\n- **Module 3 (Telegram):** the Mac mini doesn\'t have a public URL by default, so Telegram\'s webhook can\'t reach it from the internet. You\'ll need Tailscale Funnel (or equivalent tunnel) before pairing. Hostinger handles this automatically.\n- **Module 4 (cron jobs):** Mac mini sleeps when idle by default. Scheduled jobs only fire while the machine is awake. Disable sleep in System Settings or use `caffeinate` to keep cron reliable.\n\nOnce your gateway responds (the Hostinger web chat URL, or `http://localhost:18789` for Mac mini), continue to the next step.',
                 },
                 {
-                    id: 'verify-claw-running',
-                    title: 'Verify Your Claw Is Running',
-                    learn:
-                        'Before moving to security hardening, confirm your Claw is live and responding. Open the web chat — Hostinger users see a URL in the dashboard; Mac mini users open `http://localhost:18789`. Type a message and confirm the Claw replies.',
-                    do: {
-                        prompt:
-                            'Hello! I just finished setting up your VPS. Can you say hi and confirm everything is working?',
-                    },
-                    verify: {
-                        checks: [
-                            {
-                                id: 'web-chat-responds',
-                                label: 'Claw responds in the web chat',
-                                verifyPrompt:
-                                    'Can you confirm you are running? Respond ONLY with this JSON: {"checks":[{"id":"web-chat-responds","pass":true,"detail":"I am running and responding."}]}',
-                                failHint:
-                                    'The gateway may need a restart. Go to your Hostinger dashboard and restart the VPS, or wait a minute and try again.',
-                            },
-                        ],
-                    },
-                },
-                {
                     id: 'install-validator',
                     title: 'Install the Course Validator Skill',
                     learn:
@@ -119,6 +97,28 @@ const m1: Module = {
                                     'Skill install may have failed. Three things to check: (1) is the gateway actually running on this host? (2) does `openclaw skills install --help` mention GitHub URL support? (3) what error did the install command itself print?',
                                 fixPrompt:
                                     'Tell the Claw: "Run `openclaw skills install https://github.com/s1dd4rth/openclaw-mastery-skill` and report the full output. If it fails with a URL-format error, try the git-clone fallback into ~/.openclaw/workspaces/main/skills/openclaw-mastery and restart the gateway."',
+                            },
+                        ],
+                    },
+                },
+                {
+                    id: 'verify-claw-running',
+                    title: 'Verify Your Claw Is Running',
+                    learn:
+                        'Confirm your Claw is live and responding before moving on. Open the web chat — Hostinger users see a URL in the dashboard; Mac mini users open `http://localhost:18789`. Type a message and confirm the Claw replies.\n\n**First chance to use the validator.** Now that `openclaw-mastery` is installed (previous step), you can run `Use openclaw-mastery to verify module 1` in your Claw chat and paste the JSON output into the panel below. The validator\'s `web-chat-responds` check curls your gateway directly and reports back. Or just toggle the check manually after talking to your Claw — both paths work.',
+                    do: {
+                        prompt:
+                            'Hello! I just finished setting up your VPS. Can you say hi and confirm everything is working?',
+                    },
+                    verify: {
+                        checks: [
+                            {
+                                id: 'web-chat-responds',
+                                label: 'Claw responds in the web chat',
+                                verifyPrompt:
+                                    'Can you confirm you are running? Respond ONLY with this JSON: {"checks":[{"id":"web-chat-responds","pass":true,"detail":"I am running and responding."}]}',
+                                failHint:
+                                    'The gateway may need a restart. Go to your Hostinger dashboard and restart the VPS, or wait a minute and try again.',
                             },
                         ],
                     },
