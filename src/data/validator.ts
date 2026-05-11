@@ -30,11 +30,47 @@ export type ParseResult =
   | { ok: false; reason: 'tool_not_found'; message: string }
   | { ok: false; reason: 'shape_invalid'; message: string };
 
-const FENCE_RE = /^\s*```(?:json)?\s*([\s\S]*?)\s*```\s*$/;
+const FENCE_RE = /```(?:json)?\s*([\s\S]*?)```/;
 
 function stripMarkdownFence(input: string): string {
   const match = input.match(FENCE_RE);
   return match?.[1] ?? input;
+}
+
+/**
+ * Pull a JSON object out of input that may have HTML, prose, or other
+ * wrapping around it. Finds the first `{` and walks to the matching `}`,
+ * respecting nested braces and strings. Falls back to original input if
+ * no balanced object is found.
+ */
+function extractJsonObject(input: string): string {
+  const start = input.indexOf('{');
+  if (start === -1) return input;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < input.length; i++) {
+    const ch = input[i];
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === '\\' && inString) {
+      escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) return input.slice(start, i + 1);
+    }
+  }
+  return input;
 }
 
 function looksLikeToolNotFound(input: string): boolean {
@@ -50,17 +86,29 @@ function looksLikeToolNotFound(input: string): boolean {
 
 export function parseValidatorOutput(rawInput: string, expectedModuleNumber: number): ParseResult {
   const trimmed = rawInput.trim();
-  const cleaned = stripMarkdownFence(trimmed);
 
-  if (looksLikeToolNotFound(cleaned)) {
-    return { ok: false, reason: 'tool_not_found', message: cleaned.slice(0, 300) };
+  if (looksLikeToolNotFound(trimmed)) {
+    return { ok: false, reason: 'tool_not_found', message: trimmed.slice(0, 300) };
   }
 
+  // Try three parse strategies in order of strictness:
+  // 1. Raw input (clean JSON, no wrapping)
+  // 2. Markdown-fence-stripped (```json ... ```)
+  // 3. First-balanced-object (handles HTML wrapping, prose, etc.)
+  const candidates = [trimmed, stripMarkdownFence(trimmed), extractJsonObject(trimmed)];
   let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch (e) {
-    return { ok: false, reason: 'json_parse', message: e instanceof Error ? e.message : String(e) };
+  let lastError: string = '';
+  for (const candidate of candidates) {
+    try {
+      parsed = JSON.parse(candidate);
+      lastError = '';
+      break;
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : String(e);
+    }
+  }
+  if (parsed === undefined) {
+    return { ok: false, reason: 'json_parse', message: lastError };
   }
 
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
