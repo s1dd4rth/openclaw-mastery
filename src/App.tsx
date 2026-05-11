@@ -42,6 +42,37 @@ export default function App() {
     setNav({ phaseId, stepIndex: 0 });
   };
 
+  const handleAdvancePhase = () => {
+    const phaseIdx = currentModule.phases.findIndex(p => p.id === nav.phaseId);
+    if (phaseIdx >= 0 && phaseIdx < currentModule.phases.length - 1) {
+      const nextPhase = currentModule.phases[phaseIdx + 1]!;
+      setNav({ phaseId: nextPhase.id, stepIndex: 0 });
+      return;
+    }
+    const moduleIdx = MODULES_DATA.findIndex(m => m.id === nav.moduleId);
+    if (moduleIdx >= 0 && moduleIdx < MODULES_DATA.length - 1) {
+      const nextModule = MODULES_DATA[moduleIdx + 1]!;
+      setNav({
+        moduleId: nextModule.id,
+        phaseId: nextModule.phases[0]?.id ?? '',
+        stepIndex: 0,
+      });
+    }
+  };
+
+  const nextPhaseLabel = (() => {
+    const phaseIdx = currentModule.phases.findIndex(p => p.id === nav.phaseId);
+    if (phaseIdx >= 0 && phaseIdx < currentModule.phases.length - 1) {
+      return currentModule.phases[phaseIdx + 1]!.title;
+    }
+    const moduleIdx = MODULES_DATA.findIndex(m => m.id === nav.moduleId);
+    if (moduleIdx >= 0 && moduleIdx < MODULES_DATA.length - 1) {
+      const nextModule = MODULES_DATA[moduleIdx + 1]!;
+      return `${nextModule.shortTitle} — ${nextModule.phases[0]?.title ?? ''}`;
+    }
+    return null;
+  })();
+
   const handleExecute = (_prompt: string, _stepTitle: string) => {
     // No-op: user copies the prompt and pastes it in Claw manually
   };
@@ -225,6 +256,8 @@ export default function App() {
             moduleNumber={MODULES_DATA.findIndex(m => m.id === nav.moduleId) + 1}
             pasteValidatorEnabled={isPasteValidatorEnabled(nav.moduleId)}
             onApplyValidator={handleApplyValidatorPlan}
+            onAdvancePhase={handleAdvancePhase}
+            nextPhaseLabel={nextPhaseLabel}
           />
         )}
         </div>

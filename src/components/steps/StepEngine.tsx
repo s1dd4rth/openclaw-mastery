@@ -25,6 +25,8 @@ interface StepEngineProps {
   moduleNumber: number;
   pasteValidatorEnabled: boolean;
   onApplyValidator: (plan: ApplyPlan) => void;
+  onAdvancePhase: () => void;
+  nextPhaseLabel: string | null;
 }
 
 export const StepEngine = ({
@@ -43,6 +45,8 @@ export const StepEngine = ({
   moduleNumber,
   pasteValidatorEnabled,
   onApplyValidator,
+  onAdvancePhase,
+  nextPhaseLabel,
 }: StepEngineProps) => {
   const completedSteps = steps.map(s => isStepComplete(s.id));
   const step = steps[currentIndex];
@@ -140,6 +144,27 @@ export const StepEngine = ({
             >
               Next Step: {steps[currentIndex + 1]?.title}
             </button>
+          )}
+
+          {/* End of phase: jump to next phase (or next module) when last step is complete */}
+          {(completedSteps[currentIndex] || isStepComplete(step.id))
+            && currentIndex === steps.length - 1
+            && nextPhaseLabel && (
+            <button
+              onClick={onAdvancePhase}
+              className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-emerald-600/20"
+            >
+              Phase complete → Continue to {nextPhaseLabel}
+            </button>
+          )}
+
+          {/* Course complete: no next phase or module */}
+          {(completedSteps[currentIndex] || isStepComplete(step.id))
+            && currentIndex === steps.length - 1
+            && !nextPhaseLabel && (
+            <div className="w-full py-4 bg-emerald-50 text-emerald-800 rounded-xl font-bold text-sm text-center border border-emerald-200">
+              🎉 Course complete — you've reached the end of the curriculum.
+            </div>
           )}
         </div>
       )}
