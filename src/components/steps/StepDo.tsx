@@ -3,7 +3,6 @@ import { Copy, Check } from 'lucide-react';
 
 interface StepDoProps {
   prompt: string;
-  instructionUrl?: string;
   requiresInput?: {
     label: string;
     placeholder: string;
@@ -16,7 +15,6 @@ interface StepDoProps {
 
 export const StepDo = ({
   prompt,
-  instructionUrl,
   requiresInput,
   userInputs,
   onExecute,
@@ -29,9 +27,6 @@ export const StepDo = ({
 
   const buildFullPrompt = (): string => {
     let full = prompt;
-    if (instructionUrl) {
-      full = `Read the instruction at ${instructionUrl} and follow it. ${prompt}`;
-    }
     if (requiresInput && inputValue) {
       full = `${full} The user's answer: ${inputValue}`;
     }

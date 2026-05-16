@@ -91,7 +91,6 @@ export const StepEngine = ({
           {step.do && (
             <StepDo
               prompt={step.do.prompt}
-              instructionUrl={step.do.instructionUrl}
               requiresInput={step.do.requiresInput}
               userInputs={userInputs}
               onExecute={prompt => onExecute(prompt, step.title)}
