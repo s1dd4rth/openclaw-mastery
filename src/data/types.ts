@@ -14,7 +14,6 @@ export interface Step {
   learn: string;
   do?: {
     prompt: string;
-    instructionUrl?: string;
     requiresInput?: {
       label: string;
       placeholder: string;
