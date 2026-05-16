@@ -17,6 +17,8 @@ interface ValidationDashboardProps {
   passed: number;
   checks: DashboardCheck[];
   onToggleCheck: (checkId: string) => void;
+  onAdvancePhase: () => void;
+  nextPhaseLabel: string | null;
 }
 
 export const ValidationDashboard = ({
@@ -25,6 +27,8 @@ export const ValidationDashboard = ({
   passed,
   checks,
   onToggleCheck,
+  onAdvancePhase,
+  nextPhaseLabel,
 }: ValidationDashboardProps) => {
   // Group checks by phase
   const byPhase = new Map<string, DashboardCheck[]>();
@@ -95,9 +99,41 @@ export const ValidationDashboard = ({
           })}
         </div>
 
-        <p className="text-[11px] text-openclaw-dark/40 italic font-medium mt-8 text-center bg-openclaw-bg3 py-2 rounded-lg">
-          Click each check to toggle it pass/fail once you've verified it manually in Claw.
-        </p>
+        {(() => {
+          const isComplete = total > 0 && passed === total;
+          if (!nextPhaseLabel) {
+            return isComplete ? (
+              <div className="w-full mt-8 py-4 bg-emerald-50 text-emerald-800 rounded-xl font-bold text-sm text-center border border-emerald-200">
+                🎉 Course complete — you've reached the end of the curriculum.
+              </div>
+            ) : (
+              <p className="text-[11px] text-openclaw-dark/40 italic font-medium mt-8 text-center bg-openclaw-bg3 py-2 rounded-lg">
+                Click each check to toggle it pass/fail once you've verified it manually in Claw.
+              </p>
+            );
+          }
+          return (
+            <div className="mt-8 space-y-3">
+              {!isComplete && (
+                <p className="text-[11px] text-openclaw-dark/40 italic font-medium text-center bg-openclaw-bg3 py-2 rounded-lg">
+                  Click each check to toggle it pass/fail once you've verified it manually in Claw — or skip ahead and come back later.
+                </p>
+              )}
+              <button
+                onClick={onAdvancePhase}
+                className={
+                  isComplete
+                    ? 'w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-emerald-600/20'
+                    : 'w-full py-4 bg-openclaw-dark text-white rounded-xl font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-openclaw-dark/10'
+                }
+              >
+                {isComplete
+                  ? `Module complete → Continue to ${nextPhaseLabel}`
+                  : `Continue to ${nextPhaseLabel} →`}
+              </button>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

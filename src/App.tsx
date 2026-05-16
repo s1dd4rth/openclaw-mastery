@@ -230,6 +230,8 @@ export default function App() {
             passed={moduleChecks.passed}
             checks={moduleChecks.checks}
             onToggleCheck={handleToggleDashboardCheck}
+            onAdvancePhase={handleAdvancePhase}
+            nextPhaseLabel={nextPhaseLabel}
           />
         ) : (
           <StepEngine
