@@ -34,7 +34,7 @@ interface PasteValidatorOutputProps {
 
 type FeedbackState =
   | { kind: 'idle' }
-  | { kind: 'success'; appliedCount: number; failedCount: number; manualCount: number; unknownCount: number }
+  | { kind: 'success'; appliedCount: number; failedCount: number; manualCount: number; unknownCount: number; integrity?: ValidatorResponse['integrity'] }
   | { kind: 'parse_error'; message: string }
   | { kind: 'schema_too_new'; payloadVersion: number }
   | { kind: 'schema_too_old'; payloadVersion: number }
@@ -84,6 +84,7 @@ export const PasteValidatorOutput = ({ module, moduleNumber, onApply }: PasteVal
       failedCount,
       manualCount: plan.skippedManual.length,
       unknownCount: plan.unknownIds.length,
+      integrity: payload.integrity,
     };
   };
 
@@ -301,19 +302,46 @@ function renderFeedback(f: Exclude<FeedbackState, { kind: 'idle' }>) {
   switch (f.kind) {
     case 'success': {
       const passedCount = f.appliedCount - f.failedCount;
+      const integ = f.integrity;
       return (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-          <div className="flex items-start gap-2">
-            <CheckCircle2 size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
-            <div className="text-xs text-emerald-900 font-medium leading-relaxed">
-              Applied {f.appliedCount} {f.appliedCount === 1 ? 'check' : 'checks'} ({passedCount} passed
-              {f.failedCount > 0 ? `, ${f.failedCount} failed` : ''}).
-              {f.manualCount > 0 && (
-                <> {f.manualCount} manual {f.manualCount === 1 ? 'check stays' : 'checks stay'} for you to toggle.</>
-              )}
-              {f.unknownCount > 0 && (
-                <> {f.unknownCount} unknown {f.unknownCount === 1 ? 'ID' : 'IDs'} skipped (validator may be newer than the web app).</>
-              )}
+        <div className="space-y-2">
+          {integ?.status === 'MODIFIED' && (
+            <div className="bg-red-50 border-2 border-red-400 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <ShieldAlert size={18} className="text-red-600 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-red-900 font-medium leading-relaxed">
+                  <strong className="uppercase tracking-wide">Validator was modified — results untrusted.</strong> The validator's own source differs from its committed version
+                  {integ.modified_files.length > 0 && (
+                    <> (changed: <code className="bg-red-100 px-1 rounded">{integ.modified_files.join(', ')}</code>)</>
+                  )}
+                  . A reported "pass" cannot be trusted while the validator itself is edited — this is exactly how a faked verification looks. Restore the honest validator on the OpenClaw host with <code className="bg-red-100 px-1 rounded">git checkout -- .</code> in the skill directory, re-run, and paste again. The results below were applied but should be treated as suspect.
+                </div>
+              </div>
+            </div>
+          )}
+          {integ?.status === 'UNKNOWN' && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <ShieldAlert size={16} className="text-amber-700 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-amber-900 font-medium leading-relaxed">
+                  Validator integrity could not be verified ({integ.note ?? 'skill is not a git checkout, or git unavailable'}). Results can't be tamper-checked — treat with mild caution.
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+            <div className="flex items-start gap-2">
+              <CheckCircle2 size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-emerald-900 font-medium leading-relaxed">
+                Applied {f.appliedCount} {f.appliedCount === 1 ? 'check' : 'checks'} ({passedCount} passed
+                {f.failedCount > 0 ? `, ${f.failedCount} failed` : ''}).
+                {f.manualCount > 0 && (
+                  <> {f.manualCount} manual {f.manualCount === 1 ? 'check stays' : 'checks stay'} for you to toggle.</>
+                )}
+                {f.unknownCount > 0 && (
+                  <> {f.unknownCount} unknown {f.unknownCount === 1 ? 'ID' : 'IDs'} skipped (validator may be newer than the web app).</>
+                )}
+              </div>
             </div>
           </div>
         </div>

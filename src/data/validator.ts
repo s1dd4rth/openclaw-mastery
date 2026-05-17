@@ -19,6 +19,14 @@ export interface ValidatorResponse {
   validator_version: string;
   platform: 'linux' | 'macos';
   checks: ValidatorCheck[];
+  // Tamper-evidence from the validator's git self-check (alpha.9+). Optional:
+  // older validators don't emit it. MODIFIED means the validator's own source
+  // differs from git HEAD — a reported pass cannot be trusted.
+  integrity?: {
+    status: 'OK' | 'MODIFIED' | 'UNKNOWN';
+    modified_files: string[];
+    note: string | null;
+  };
 }
 
 export type ParseResult =
